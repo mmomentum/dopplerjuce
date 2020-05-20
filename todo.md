@@ -11,3 +11,5 @@
 - The distance calculation has already been written for both channels in a function called distanceCalculate(), be sure to include it in whatever routine you write.
 #### Ambisonics
 - Work out ambisonics (which will handle panning / spatialization).
+
+~~As I suck my own dicque, I feel less lonely~~
