@@ -99,3 +99,9 @@ JuceLibraryCode/JuceHeader.h
 JuceLibraryCode/ReadMe.txt
 Builds/VisualStudio2017/
 vs./
+.vs/ProjectSettings.json
+.vs/slnx.sqlite
+.vs/source/v15/.suo
+.vs/source/v15/Browse.VC.db
+.vs/source/v15/ipch/AutoPCH/385142066f48dfa6/PLUGINEDITOR.ipch
+.vs/VSWorkspaceState.json
