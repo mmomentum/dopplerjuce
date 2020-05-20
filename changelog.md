@@ -1,3 +1,16 @@
+### 19/05/2020
+#### aidan
+- made a new repository with a different root file (so now the .jucer is included and cross-platform / cross-developer use is more streamlined and there will be less of a hassle)
+---
+### 18/05/2020
+#### aidan
+- added a delay calculation function within pluginprocessor.cpp
+---
+### 17/05/2020
+#### aidan
+- got global variables working (using the **extern** definition)
+- added a function for distance calculation within pluginprocessor.cpp
+---
 ### 16/05/2020
 #### aidan
 - adjust the interpolator to be exponential (time parameter is now inaccurate now but fixing it might be easily doable)
