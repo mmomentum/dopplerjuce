@@ -262,7 +262,7 @@ float DopplerAudioProcessor::distanceCalculate()
 	auto sizeValue = treeState.getRawParameterValue(SIZE_ID); // size of plane (meters)
 	auto distanceValue = treeState.getRawParameterValue(DISTANCE_ID); // spacing distance between pickup points (meters)
 
-	float distanceValueMeters = distanceValue[0] / 100.0f; // divide down into centimeters once instead of four times per function call
+	double distanceValueMeters = distanceValue[0] / 100.0; // divide down into centimeters once instead of four times per function call
 
 	Point<float> soundEmitterLocationMeters; // point for the actual ACTUAL location (in meters instead of an arbitrary -1 - +1 range) 
 
