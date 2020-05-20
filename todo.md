@@ -1,4 +1,3 @@
-# H1
 ### TODO
 #### Pitch-adjusting delay (tape-style delay)
 - Implement a short, 100% wet stereo delay capable of adjusting the output signal based on the delay time. 
@@ -11,5 +10,7 @@
 - The distance calculation has already been written for both channels in a function called distanceCalculate(), be sure to include it in whatever routine you write.
 #### Ambisonics
 - Work out ambisonics (which will handle panning / spatialization).
+#### Value Smoothing
+- Deal with the smoothing of values utilised in the audio processing block (and also per-sample processing)
 
 ~~As I suck my own dicque, I feel less lonely~~
