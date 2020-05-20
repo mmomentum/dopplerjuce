@@ -98,7 +98,7 @@ JuceLibraryCode/include_juce_opengl.mm
 JuceLibraryCode/JuceHeader.h
 JuceLibraryCode/ReadMe.txt
 Builds/VisualStudio2017/
-vs./
+.vs/
 .vs/ProjectSettings.json
 .vs/slnx.sqlite
 .vs/source/v15/.suo
