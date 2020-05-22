@@ -88,20 +88,21 @@ const String DopplerAudioProcessor::getProgramName(int index)
 
 void DopplerAudioProcessor::changeProgramName(int index, const String& newName)
 {
-
 }
 
 //==============================================================================
 void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-	// Use this method as the place to do any pre-playback
-	// initialisation that you need..
-	const int numInputChannels = getTotalNumInputChannels();
-	const int delayBufferSamples = sampleRate;
-	mSampleRate = sampleRate;
+	globalSampleRate = getSampleRate();
 
-	mDelayBuffer.setSize(numInputChannels, delayBufferSamples);
-	// max buffer size is one second of audio according to the sample rate, will adjust later for max memory efficiency
+	dsp::ProcessSpec spec;
+	spec.sampleRate = sampleRate;
+	spec.maximumBlockSize = samplesPerBlock;
+	spec.numChannels = getTotalNumOutputChannels();
+
+
+	lowPassFilter.prepare(spec);
+	lowPassFilter.reset();
 }
 
 void DopplerAudioProcessor::releaseResources()
@@ -134,68 +135,55 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 }
 #endif
 
+void DopplerAudioProcessor::updateFilter()
+{
+	auto freq = jmap(distanceL, 0.0f, 150.0f, 20000.0f, 500.0f); // primitive way of calculating cutoff
+	float res = 0.9;
+
+	*lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, freq, res); // set filter state
+}
+
 void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+	auto distanceValue = treeState.getRawParameterValue(DISTANCE_ID);
+
 	ScopedNoDenormals noDenormals;
 	auto totalNumInputChannels = getTotalNumInputChannels();
 	auto totalNumOutputChannels = getTotalNumOutputChannels();
 
+	distanceCalculate();
+
+	// In case we have more outputs than inputs, this code clears any output
+	// channels that didn't contain input data, (because these aren't
+	// guaranteed to be empty - they may contain garbage).
+	// This is here to avoid people getting screaming feedback
+	// when they first compile a plugin, but obviously you don't need to keep
+	// this code if your algorithm always overwrites all the output channels.
 	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
 		buffer.clear(i, 0, buffer.getNumSamples());
 
 	// This is the place where you'd normally do the guts of your plugin's
 	// audio processing...
+	// Make sure to reset the state if your inner loop is processing
+	// the samples and the outer loop is handling the channels.
+	// Alternatively, you can process the samples with the channels
+	// interleaved by keeping the same state.
 
-	// define buffer sample lengths as constants
-	const int bufferLength = buffer.getNumSamples();
-	const int delayBufferLength = mDelayBuffer.getNumSamples();
+
 
 	for (int channel = 0; channel < totalNumInputChannels; ++channel)
 	{
-		// create read pointers for delay buffers (essentially a "tape head" but digital and for memory)
-		const float* bufferData = buffer.getReadPointer(channel);
-		const float* delayBufferData = mDelayBuffer.getReadPointer(channel);
+		auto* channelData = buffer.getWritePointer(channel);
 
-		fillDelayBuffer(channel, bufferLength, delayBufferLength, bufferData, delayBufferData); // copy input buffer to delay buffer (circular buffer)
-		getFromDelayBuffer(buffer, channel, bufferLength, delayBufferLength, bufferData, delayBufferData);
-	}
-	mWritePosition += bufferLength;
-	mWritePosition %= delayBufferLength;
-}
+		dsp::AudioBlock <float> block(buffer);
+		updateFilter();
+		lowPassFilter.process(dsp::ProcessContextReplacing<float>(block)); // basic filtering
 
-//==============================================================================
-
-// custom functions for IATD used within the audio processor
-
-void DopplerAudioProcessor::fillDelayBuffer(int channel, const int bufferLength, const int delayBufferLength, const float* bufferData, const float* delayBufferData)
-{
-	if (delayBufferLength > bufferLength + mWritePosition) // initial filling up of buffer
-	{
-		mDelayBuffer.copyFromWithRamp(channel, mWritePosition, bufferData, bufferLength, 0.8, 0.8);
-	}
-	else // after initial
-	{
-		const int bufferRemaining = delayBufferLength - mWritePosition;
-
-		mDelayBuffer.copyFromWithRamp(channel, mWritePosition, bufferData, bufferRemaining, 0.8, 0.8);
-		mDelayBuffer.copyFromWithRamp(channel, 0, bufferData, bufferLength + bufferRemaining, 0.8, 0.8); // take last sample
-	}
-}
-
-void DopplerAudioProcessor::getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int bufferLength, const int delayBufferLength, const float* bufferData, const float* delayBufferData)
-{
-	int delayTime = 600; // delay time in milliseconds (will simplify to samples later)
-	const int readPosition = static_cast<int> (delayBufferLength + mWritePosition - (mSampleRate * delayTime / 1000)) % delayBufferLength;
-
-	if (delayBufferLength > bufferLength + readPosition)
-	{
-		buffer.addFrom(channel, 0, delayBufferData + readPosition, bufferLength);
-	}
-	else 
-	{
-		const int bufferRemaining = delayBufferLength - readPosition;
-		buffer.addFrom(channel, 0, delayBufferData + readPosition, bufferRemaining);
-		buffer.addFrom(channel, bufferRemaining, delayBufferData, bufferLength - bufferRemaining);
+		// basic attenuation (currently controlling via the jmap distance slider)
+		for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+		{
+			channelData[sample] = channelData[sample] * jmap((float)distanceValue[0], 5.0f, 50.0f, 0.0f, 1.0f);
+		}
 	}
 }
 
@@ -207,10 +195,7 @@ bool DopplerAudioProcessor::hasEditor() const
 
 AudioProcessorEditor* DopplerAudioProcessor::createEditor()
 {
-	DopplerAudioProcessorEditor *ret = new DopplerAudioProcessorEditor(*this);
-	ret->padxy->getWidth();
-	//ret->parampanel->getWidth();
-	return ret;
+	return new DopplerAudioProcessorEditor(*this);
 }
 
 //==============================================================================
@@ -234,6 +219,7 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 	return new DopplerAudioProcessor();
 }
 
+
 // for our parameters. more parameters and types can be added relatively easily
 AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParameters()
 {
@@ -254,7 +240,7 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 	auto distanceParameter = std::make_unique<AudioParameterFloat>(DISTANCE_ID, DISTANCE_NAME, 5.0f, 50.0f, 9.0f);
 	params.push_back(std::move(distanceParameter));
 
-	return { params.begin(), params.end() };
+	return { params.begin(), params.end() }; 
 }
 
 float DopplerAudioProcessor::distanceCalculate()
@@ -281,8 +267,8 @@ float DopplerAudioProcessor::delayCalculate()
 	// calculate delay times in samples by dividing distance by the speed
 	// of sound in meters and then multiplying it by the current sample rate.
 
-	delayL = roundToInt((distanceL / SPEED_OF_SOUND) * mSampleRate);
-	delayR = roundToInt((distanceR / SPEED_OF_SOUND) * mSampleRate);
+	delayL = roundToInt((distanceL / SPEED_OF_SOUND) * globalSampleRate);
+	delayR = roundToInt((distanceR / SPEED_OF_SOUND) * globalSampleRate);
 
 	return 0;
 }

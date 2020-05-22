@@ -71,31 +71,24 @@ public:
 
 	//==============================================================================
 
-	// custom function for copying input samples to a delay buffer (for IATD)
-	void fillDelayBuffer(int channel, const int bufferLength, const int delayBufferLength, const float* bufferData, const float* delayBufferData);
-	
-	// custom function for getting data from the buffer
-	void getFromDelayBuffer(AudioBuffer<float>& buffer, int channel, const int bufferLength, const int delayBufferLength, const float* bufferData, const float* delayBufferData);
-
-	//==============================================================================
-
-	// calculate distance from origin for IATD
+	// calculate distance from origin for various processing systems
 	float distanceCalculate(); 
 
-	// calclate delay times (in samples) for L / R delays (works alongside distanceCalculate)
+	// calclate delay times (in samples) for IATD L / R delays (works using distanceCalculate())
 	float delayCalculate(); 
+
+	void updateFilter();
 
 	AudioProcessorValueTreeState treeState;
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 
 private:
 
-	AudioBuffer<float> mDelayBuffer; // for IATD
-	int mWritePosition{ 0 }; // initial write position for delay
-	int mSampleRate = getSampleRate();
+	dsp::ProcessorDuplicator <dsp::IIR::Filter<float>, dsp::IIR::Coefficients <float>> lowPassFilter;
+
+	int globalSampleRate;
 
 	float distanceL, distanceR; // calculated distance values (in meters)
-
 	int delayL, delayR; // calculated delay value (in samples)
 
 	//==============================================================================

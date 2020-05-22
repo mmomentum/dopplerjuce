@@ -11,6 +11,14 @@
       <FILE id="WKABkr" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
       <FILE id="K8bkqT" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+    </GROUP>
+    <GROUP id="{31D396AB-D67C-E75D-587E-C62FA0407FF7}" name="Globals">
+      <FILE id="pnIrCO" name="GlobalVariables.cpp" compile="1" resource="0"
+            file="source/GlobalVariables.cpp"/>
+      <FILE id="M6ZkYc" name="GlobalVariables.h" compile="0" resource="0"
+            file="Source/GlobalVariables.h"/>
+    </GROUP>
+    <GROUP id="{E874A0F7-9E44-CCB7-3EC0-017C31390FB1}" name="Graphics">
       <FILE id="TgFajM" name="PadXY.cpp" compile="1" resource="0" file="Source/PadXY.cpp"/>
       <FILE id="sPclIB" name="PadXY.h" compile="0" resource="0" file="Source/PadXY.h"/>
       <FILE id="yRNDdI" name="ParameterPanel.cpp" compile="1" resource="0"
@@ -19,10 +27,6 @@
             file="source/ParameterPanel.h"/>
       <FILE id="aY1jbx" name="InterfaceDefines.h" compile="0" resource="0"
             file="source/InterfaceDefines.h"/>
-      <FILE id="pnIrCO" name="GlobalVariables.cpp" compile="1" resource="0"
-            file="source/GlobalVariables.cpp"/>
-      <FILE id="M6ZkYc" name="GlobalVariables.h" compile="0" resource="0"
-            file="Source/GlobalVariables.h"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
@@ -46,6 +50,7 @@
         <MODULEPATH id="juce_gui_basics" path="../../Desktop/JUCE/modules"/>
         <MODULEPATH id="juce_gui_extra" path="../../Desktop/JUCE/modules"/>
         <MODULEPATH id="juce_opengl" path="../../Desktop/JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../Desktop/JUCE/modules"/>
       </MODULEPATHS>
     </VS2017>
   </EXPORTFORMATS>
@@ -60,6 +65,7 @@
     <MODULE id="juce_core" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_cryptography" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_data_structures" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
+    <MODULE id="juce_dsp" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_events" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_graphics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
     <MODULE id="juce_gui_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
