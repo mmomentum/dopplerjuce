@@ -1,3 +1,8 @@
+### 21/05/2020
+#### aidan
+- implemented basic functionality for filtering and attenuation within the processing system
+- the current math for calculating filtering / attenuation is in no way accurate to what we would need for a real spatializer
+---
 ### 19/05/2020
 #### aidan
 - made a new repository with a different root file (so now the .jucer is included and cross-platform / cross-developer use is more streamlined and there will be less of a hassle)
