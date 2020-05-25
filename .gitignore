@@ -105,3 +105,57 @@ Builds/VisualStudio2017/
 .vs/source/v15/Browse.VC.db
 .vs/source/v15/ipch/AutoPCH/385142066f48dfa6/PLUGINEDITOR.ipch
 .vs/VSWorkspaceState.json
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/vc142.pdb
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/resources.res
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/include_juce_audio_plugin_client_Standalone.obj
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_StandalonePlugin.log
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/rc.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/rc.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/rc.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/link.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/link.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/link.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/doppler_StandalonePlugin.lastbuildstate
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/CL.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/CL.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/CL.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler.pdb
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler.ilk
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler.exe
+Builds/VisualStudio2019/x64/Debug/Shared Code/PluginProcessor.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/PluginEditor.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/ParameterPanel.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/PadXY.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_opengl.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_gui_extra.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_gui_basics.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_graphics.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_events.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_dsp.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_data_structures.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_cryptography.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_core.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_audio_utils.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_audio_processors.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_audio_plugin_client_utils.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_audio_formats.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_audio_devices.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/include_juce_audio_basics.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/GlobalVariables.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_SharedCode.pdb
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_SharedCode.log
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/Lib.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/Lib-link.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/Lib-link.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/doppler_SharedCode.lastbuildstate
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/CL.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/CL.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/CL.11872.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler.lib
+Builds/VisualStudio2019/resources.rc
+Builds/VisualStudio2019/doppler_StandalonePlugin.vcxproj.user
+Builds/VisualStudio2019/doppler_StandalonePlugin.vcxproj.filters
+Builds/VisualStudio2019/doppler_StandalonePlugin.vcxproj
+Builds/VisualStudio2019/doppler_SharedCode.vcxproj.filters
+Builds/VisualStudio2019/doppler_SharedCode.vcxproj
+Builds/VisualStudio2019/doppler.sln
