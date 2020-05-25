@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <JUCERPROJECT id="N1rJfH" name="doppler" projectType="audioplug" jucerVersion="5.4.5"
-              pluginFormats="buildStandalone">
+              pluginFormats="buildStandalone,buildVST3">
   <MAINGROUP id="rdFA8w" name="doppler">
     <GROUP id="{41072A8D-0C03-0299-906C-E40FCF11607E}" name="Source">
       <FILE id="afgqA8" name="PluginProcessor.cpp" compile="1" resource="0"
@@ -27,6 +27,10 @@
             file="source/ParameterPanel.h"/>
       <FILE id="aY1jbx" name="InterfaceDefines.h" compile="0" resource="0"
             file="source/InterfaceDefines.h"/>
+    </GROUP>
+    <GROUP id="{3ABCDAE5-FBC2-E3F0-61C7-024EE181F989}" name="Processing">
+      <FILE id="kTAWEO" name="Delay.cpp" compile="1" resource="0" file="source/Delay.cpp"/>
+      <FILE id="GmAXGh" name="Delay.h" compile="0" resource="0" file="source/Delay.h"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
