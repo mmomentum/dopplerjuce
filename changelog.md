@@ -1,3 +1,9 @@
+### 24/05/2020
+#### aidan
+- spent the last few days finding VSTs and code to reverse engineer for the pitch shifting / delay systems and it seems like i've found both; 
+- for the pitch shifting system i will need to determine constants for the FFT settings as well as set up a system for determining pitch shift based on velocity.
+- for the delay, VCV rack's fundamental delay acts exactly as we need it to, and it's code is open source.
+--- 
 ### 21/05/2020
 #### aidan
 - implemented basic functionality for filtering and attenuation within the processing system
