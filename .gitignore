@@ -159,3 +159,29 @@ Builds/VisualStudio2019/doppler_StandalonePlugin.vcxproj
 Builds/VisualStudio2019/doppler_SharedCode.vcxproj.filters
 Builds/VisualStudio2019/doppler_SharedCode.vcxproj
 Builds/VisualStudio2019/doppler.sln
+Builds/VisualStudio2019/doppler_SharedCode.vcxproj.user
+Builds/VisualStudio2019/doppler_VST3.vcxproj
+Builds/VisualStudio2019/doppler_VST3.vcxproj.filters
+Builds/VisualStudio2019/x64/Debug/Shared Code/Delay.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/doppler_.217D8A4C.tlog/CL.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/link.11536.delete.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler.exp
+Builds/VisualStudio2019/x64/Debug/VST3/doppler.ilk
+Builds/VisualStudio2019/x64/Debug/VST3/doppler.lib
+Builds/VisualStudio2019/x64/Debug/VST3/doppler.pdb
+Builds/VisualStudio2019/x64/Debug/VST3/doppler.vst3
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.log
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/CL.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/CL.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/CL.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/doppler_VST3.lastbuildstate
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/doppler_VST3.write.1u.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/link.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/link.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/link.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/rc.command.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/rc.read.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/rc.write.1.tlog
+Builds/VisualStudio2019/x64/Debug/VST3/include_juce_audio_plugin_client_VST3.obj
+Builds/VisualStudio2019/x64/Debug/VST3/resources.res
+Builds/VisualStudio2019/x64/Debug/VST3/vc142.pdb
