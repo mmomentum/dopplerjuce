@@ -16,13 +16,16 @@
 
 #define X_ID "x"
 #define X_NAME "x"
+
 #define Y_ID "y"
 #define Y_NAME "y"
 
 #define SIZE_ID "size"
 #define SIZE_NAME "size"
+
 #define	SMOOTH_ID "smooth"
 #define SMOOTH_NAME "smooth"
+
 #define DISTANCE_ID "distance"
 #define DISTANCE_NAME "distance"
 
