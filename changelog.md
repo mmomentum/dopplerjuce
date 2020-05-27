@@ -1,3 +1,8 @@
+### 26/05/2020
+#### aidan
+- realised today while making the velocity calculator that the interpolation timer system stops working when the GUI is closed because plugineditor files are only supposed to be there for the visuals, they stop running when the GUI is closed.
+- i'll need to fix this by moving the timer / interpolator to the pluginprocessor.cpp file, and somehow "linking" the dot locations to eachother via a global variable so that visual feedback still works.
+---
 ### 24/05/2020
 #### aidan
 - spent the last few days finding VSTs and code to reverse engineer for the pitch shifting / delay systems and it seems like i've found both; 

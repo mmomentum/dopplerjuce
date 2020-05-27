@@ -176,14 +176,6 @@ void PadXY::sliderValueChanged(Slider* slider)
 
 void PadXY::timerCallback()
 {
-	//x1' = x1 + (x2 - x1) * (time/totalTime)
-	//x1' - x1 = (x2-x1) * (time/totalTime)
-	//(x1'-x1)/(time/totalTime) = (x2-x1)
-	//1/(time/totalTime) = (x2-x1) / (x1'-x1)
-	//
-
-
-	
 	// internal GUI based parameter use (smoothing)
 	auto smoothingValue = processor.treeState.getRawParameterValue(SMOOTH_ID); 
 
@@ -201,8 +193,8 @@ void PadXY::timerCallback()
 
 	// set actual sound emitter location to the almost the same standard as the original 
 	// slider values, almost an exact reverse mapping from the sliderValueChanged function.
-	soundEmitterLocationXY.setXY(jmap(dotActual.getX() - 0.0f, 10.0f, (XY_PAD_WIDTH - 50.0f), -1.0f, 1.0f) + 0.059, 
-								 (jmap(dotActual.getY() - 0.0f, 10.0f, (XY_PAD_HEIGHT - 50.0f), -1.0f, 1.0f) + 0.059) * -1.0f);
+	soundEmitterLocationXY.setXY(jmap(dotActual.getX() - 0.0f, 10.0f, (XY_PAD_WIDTH  - 50.0f), -1.0f, 1.0f) + 0.059, 
+								(jmap(dotActual.getY() - 0.0f, 10.0f, (XY_PAD_HEIGHT - 50.0f), -1.0f, 1.0f) + 0.059) * -1.0f);
 
 	// for some reason the center is off by a tiny bit in a lot of the code. the + 0.059 fixes it but its a shitty kludge
 

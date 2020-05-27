@@ -31,7 +31,7 @@
 
 //==============================================================================
 
-class DopplerAudioProcessor : public AudioProcessor
+class DopplerAudioProcessor : public AudioProcessor, public Timer
 {
 public:
 
@@ -74,6 +74,8 @@ public:
 
 	//==============================================================================
 
+	void timerCallback() override;
+
 	// calculate distance from origin for various processing systems
 	float distanceCalculate(); 
 
@@ -91,8 +93,8 @@ private:
 
 	int globalSampleRate;
 
-	float distanceL, distanceR; // calculated distance values (in meters)
-	int delayL, delayR; // calculated delay value (in samples)
+	float distance[2]; // calculated distance values (in meters)
+	int delay[2]; // calculated delay value (in samples)
 
 	//==============================================================================
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DopplerAudioProcessor)

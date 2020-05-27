@@ -21,10 +21,10 @@ DopplerAudioProcessor::DopplerAudioProcessor() // constructor
 			#endif
 			.withOutput("Output", AudioChannelSet::stereo(), true)
 		#endif
-	), treeState(*this, nullptr, "Parameters", createParameters())
+	), treeState(*this, nullptr, "Parameters", createParameters()), Timer()
 #endif
 {
-
+	Timer::startTimerHz(60);
 }
 
 //==============================================================================
@@ -137,7 +137,7 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 
 void DopplerAudioProcessor::updateFilter()
 {
-	auto freq = jmap(distanceL, 0.0f, 150.0f, 20000.0f, 500.0f); // primitive way of calculating cutoff
+	auto freq = jmap(distance[1], 0.0f, 150.0f, 20000.0f, 500.0f); // primitive way of calculating cutoff
 	float res = 0.9;
 
 	*lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, freq, res); // set filter state
@@ -256,8 +256,8 @@ float DopplerAudioProcessor::distanceCalculate()
 	soundEmitterLocationMeters.setXY((soundEmitterLocationXY.getX() * sizeValue[0]), (soundEmitterLocationXY.getY() * sizeValue[0]));
 
 	// pythagorean theorem to get the distance values on our 2D plane
-	distanceL = sqrt(square(distanceValueMeters - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY()));
-	distanceR = sqrt(square((distanceValueMeters * -1.0f) - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY()));
+	distance[0] = sqrt(square(distanceValueMeters - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY()));
+	distance[1] = sqrt(square((distanceValueMeters * -1.0f) - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY()));
 
 	return 0;
 }
@@ -267,13 +267,18 @@ float DopplerAudioProcessor::delayCalculate()
 	// calculate delay times in samples by dividing distance by the speed
 	// of sound in meters and then multiplying it by the current sample rate.
 
-	delayL = roundToInt((distanceL / SPEED_OF_SOUND) * globalSampleRate);
-	delayR = roundToInt((distanceR / SPEED_OF_SOUND) * globalSampleRate);
+	delay[0] = roundToInt((distance[0] / SPEED_OF_SOUND) * globalSampleRate);
+	delay[1] = roundToInt((distance[1] / SPEED_OF_SOUND) * globalSampleRate);
 
 	return 0;
 }
 
-DopplerAudioProcessor::~DopplerAudioProcessor() // destructor
+void DopplerAudioProcessor::timerCallback()
 {
 
+}
+
+DopplerAudioProcessor::~DopplerAudioProcessor() // destructor
+{
+	Timer::stopTimer();
 }
