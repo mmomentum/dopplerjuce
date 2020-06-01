@@ -14,4 +14,4 @@
 
 #define SPEED_OF_SOUND					343
 
-extern Point<float> soundEmitterLocationXY;
+extern Point<float> soundEmitterLocationXY; // location of sound emitter as it's "parameter value" (aka -1 - +1 on each axis)

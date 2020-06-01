@@ -11,6 +11,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+Point<float> soundEmitterLocationXY;
+
 //==============================================================================
 DopplerAudioProcessor::DopplerAudioProcessor() // constructor
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -24,7 +26,9 @@ DopplerAudioProcessor::DopplerAudioProcessor() // constructor
 	), treeState(*this, nullptr, "Parameters", createParameters()), Timer()
 #endif
 {
+	internalInterpolatorPoint.setXY(0.0f, 0.0f);
 	Timer::startTimerHz(60);
+	//Timer::startTimer(16);
 }
 
 //==============================================================================
@@ -171,7 +175,7 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 
 
-	for (int channel = 0; channel < totalNumInputChannels; ++channel)
+	for (int channel = 0; channel < totalNumInputChannels; ++channel) // for each channel in the block
 	{
 		auto* channelData = buffer.getWritePointer(channel);
 
@@ -179,10 +183,9 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 		updateFilter();
 		lowPassFilter.process(dsp::ProcessContextReplacing<float>(block)); // basic filtering
 
-		// basic attenuation (currently controlling via the jmap distance slider)
-		for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+		for (int sample = 0; sample < buffer.getNumSamples(); ++sample) // for each sample in the channel
 		{
-			channelData[sample] = channelData[sample] * jmap((float)distanceValue[0], 5.0f, 50.0f, 0.0f, 1.0f);
+			channelData[sample] = channelData[sample] * jmap((float)distanceValue[0], 5.0f, 50.0f, 0.0f, 1.0f); // basic attenuation (currently controlling via the jmap distance slider)
 		}
 	}
 }
@@ -266,16 +269,47 @@ float DopplerAudioProcessor::delayCalculate()
 {
 	// calculate delay times in samples by dividing distance by the speed
 	// of sound in meters and then multiplying it by the current sample rate.
+	for (int channel = 0; channel < 2; channel++)
+		delay[channel] = roundToInt((distance[channel] / SPEED_OF_SOUND) * globalSampleRate);
 
-	delay[0] = roundToInt((distance[0] / SPEED_OF_SOUND) * globalSampleRate);
-	delay[1] = roundToInt((distance[1] / SPEED_OF_SOUND) * globalSampleRate);
+	return 0;
+}
+
+float DopplerAudioProcessor::velocityCalculate()
+{
+	// basically just calculating the difference between the current and last distances for L / R
+
+	static float lastDistance[2] = { 0,0 };
+
+	for (int channel = 0; channel < 2; channel++)
+	{
+		velocity[channel] = (distance[channel] - lastDistance[channel]) * 60.0f; // multiply by # of calls of timer per second
+
+		lastDistance[channel] = distance[channel];
+	}
 
 	return 0;
 }
 
 void DopplerAudioProcessor::timerCallback()
 {
+	// get X / Y coordinate parameters
+	
+	auto xCoordinate = treeState.getRawParameterValue(X_ID);
+	auto yCoordinate = treeState.getRawParameterValue(Y_ID);
 
+	// declare smoothing value
+	auto smoothingValue = treeState.getRawParameterValue(SMOOTH_ID);
+
+	Point<float> diff;
+	diff.setXY(xCoordinate[0] - (internalInterpolatorPoint.getX() - 0.0f), yCoordinate[0] - (internalInterpolatorPoint.getY() - 0.0f));
+
+	float timePortion = getTimerInterval() / (smoothingValue[0] / 2); // smoothing value isn't actually in milliseconds i dont think...
+
+	interpolationMovementAmount.setXY(diff.getX() * timePortion, diff.getY() * timePortion);
+	internalInterpolatorPoint += interpolationMovementAmount;
+
+	soundEmitterLocationXY.setXY(internalInterpolatorPoint.getX(), internalInterpolatorPoint.getY());
 }
 
 DopplerAudioProcessor::~DopplerAudioProcessor() // destructor

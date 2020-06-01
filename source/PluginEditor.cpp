@@ -26,10 +26,6 @@ DopplerAudioProcessorEditor::DopplerAudioProcessorEditor(DopplerAudioProcessor& 
 	parampanel = std::make_unique<ParameterPanel>(p);
 	addAndMakeVisible(*parampanel);
 	parampanel->setBounds(BORDER_SIZE, XY_PAD_HEIGHT, PARAMETER_PANEL_WIDTH - (BORDER_SIZE * 2), PARAMETER_PANEL_HEIGHT - BORDER_SIZE);
-
-
-	//((Component*)0)->getWidth();
-	//padxy->addAndMakeVisible();
 }
  
 void DopplerAudioProcessorEditor::paint(Graphics& g)
@@ -39,12 +35,10 @@ void DopplerAudioProcessorEditor::paint(Graphics& g)
 
 void DopplerAudioProcessorEditor::resized()
 {
-	//if(padxySafeYet)
-		//padxy->setBounds (BORDER_SIZE, BORDER_SIZE, XY_PAD_WIDTH - (BORDER_SIZE*2), XY_PAD_HEIGHT - (BORDER_SIZE*2));
+
 }
 
 DopplerAudioProcessorEditor::~DopplerAudioProcessorEditor()
 {
-	//delete padxy;
-	//padxy = 0;
+
 }

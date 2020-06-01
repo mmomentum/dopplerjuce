@@ -82,6 +82,9 @@ public:
 	// calclate delay times (in samples) for IATD L / R delays (works using distanceCalculate())
 	float delayCalculate(); 
 
+	// calculate velocity (in meters / second) for FFT based doppler
+	float velocityCalculate();
+
 	void updateFilter();
 
 	AudioProcessorValueTreeState treeState;
@@ -89,12 +92,20 @@ public:
 
 private:
 
+	// declare internal interpolated point (and set to 0,0 to avoid errors)
+	Point<float> internalInterpolatorPoint;
+
+	Point<float> interpolationMovementAmount;
+	float interpolationTime;
+	float interpolationRemaining;
+
 	dsp::ProcessorDuplicator <dsp::IIR::Filter<float>, dsp::IIR::Coefficients <float>> lowPassFilter;
 
 	int globalSampleRate;
 
 	float distance[2]; // calculated distance values (in meters)
-	int delay[2]; // calculated delay value (in samples)
+	int delay[2]; // calculated delay values (in samples)
+	float velocity[2]; // calculated velocity values (in m/s). positive values = moving towards you and vice versa.
 
 	//==============================================================================
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DopplerAudioProcessor)

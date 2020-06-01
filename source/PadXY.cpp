@@ -11,7 +11,7 @@
 #include <JuceHeader.h>
 #include "PadXY.h"
 
-Point<float> soundEmitterLocationXY;
+//Point<float> soundEmitterLocationXY;
 
 //==============================================================================
 
@@ -68,7 +68,7 @@ PadXY::PadXY(DopplerAudioProcessor& p)
 
 	// start timer
 
-	Timer::startTimerHz(60);
+	Timer::startTimerHz(60); // this timer's interval is up to how accurate you want the FPS to be on the interpolated dot (currently 60 fps)
 }
 
 //==============================================================================
@@ -157,13 +157,11 @@ void PadXY::sliderValueChanged(Slider* slider)
 	{
 		if (processor.getNumParameters() > 0) // checker for parameter vector
 			processor.getParameters()[0]->setValue(slider->getValue()); // push to parameters vector
-		//xLabel.setText(String(slider->getValue(), 3), dontSendNotification); // set x label
 	}
 	if (slider == &ySlider)
 	{
 		if (processor.getNumParameters() > 1)
 			processor.getParameters()[1]->setValue(slider->getValue()); // push to parameters vector
-		//yLabel.setText(String(slider->getValue(), 3), dontSendNotification); // set y label
 	}
 
 	// set slider control values to the dot's graphical position
@@ -176,29 +174,16 @@ void PadXY::sliderValueChanged(Slider* slider)
 
 void PadXY::timerCallback()
 {
-	// internal GUI based parameter use (smoothing)
-	auto smoothingValue = processor.treeState.getRawParameterValue(SMOOTH_ID); 
-
-	Point<int> diff = dotTarget.getPosition() - dotActual.getPosition();
-	float timePortion = getTimerInterval() / (smoothingValue[0] / 2);
-
-	interpolationMovementAmount.setXY(diff.getX() * timePortion, diff.getY() * timePortion);
-	dotActual.dotXY += interpolationMovementAmount;
-
 	// set dot location
-	dotActual.setCentrePosition(dotActual.dotXY.getX(),dotActual.dotXY.getY());
+	dotActual.setCentrePosition(jmap(soundEmitterLocationXY.getX(), -1.0f, 1.0f, 10.0f, (XY_PAD_WIDTH - 50.0f)),
+								jmap((soundEmitterLocationXY.getY() * -1.0f), -1.0f, 1.0f, 10.0f, (XY_PAD_HEIGHT - 50.0f)));
+
+	// seeing a bit of inaccuracy after the move to the audioprocessor but its probably just a jmap target range issue
 
 	// repaint
 	dotActual.repaint();
 
-	// set actual sound emitter location to the almost the same standard as the original 
-	// slider values, almost an exact reverse mapping from the sliderValueChanged function.
-	soundEmitterLocationXY.setXY(jmap(dotActual.getX() - 0.0f, 10.0f, (XY_PAD_WIDTH  - 50.0f), -1.0f, 1.0f) + 0.059, 
-								(jmap(dotActual.getY() - 0.0f, 10.0f, (XY_PAD_HEIGHT - 50.0f), -1.0f, 1.0f) + 0.059) * -1.0f);
-
-	// for some reason the center is off by a tiny bit in a lot of the code. the + 0.059 fixes it but its a shitty kludge
-
-	// set labels for testing
+	// set labels
 	xLabel.setText(String(soundEmitterLocationXY.getX(), 3), dontSendNotification);
 	yLabel.setText(String(soundEmitterLocationXY.getY(), 3), dontSendNotification);
 }

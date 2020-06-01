@@ -62,11 +62,6 @@ class PadXY : public Component, public Slider::Listener, public Timer
 		friend class PadXY;
 	};
 
-	// interpolation
-	Point<float> interpolationMovementAmount;
-	float interpolationTime;
-	float interpolationRemaining;
-
 	// visual dots
 	XYDot dotTarget; // dragged dot on XY pad, the *target* for where the emitter is going to
 	XYDot dotActual; // visual representation of the *actual* location of the sound emitter
