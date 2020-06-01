@@ -85,28 +85,18 @@ public:
 	// calculate velocity (in meters / second) for FFT based doppler
 	float velocityCalculate();
 
-	void updateFilter();
-
 	AudioProcessorValueTreeState treeState;
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 
 private:
+	//==============================================================================
 
-	// declare internal interpolated point (and set to 0,0 to avoid errors)
-	Point<float> internalInterpolatorPoint;
+	int globalSampleRate; // sets to whatever our current sample rate is
 
-	Point<float> interpolationMovementAmount;
-	float interpolationTime;
-	float interpolationRemaining;
-
-	dsp::ProcessorDuplicator <dsp::IIR::Filter<float>, dsp::IIR::Coefficients <float>> lowPassFilter;
-
-	int globalSampleRate;
-
+	// various physical values used by the audio processor systems
 	float distance[2]; // calculated distance values (in meters)
 	int delay[2]; // calculated delay values (in samples)
 	float velocity[2]; // calculated velocity values (in m/s). positive values = moving towards you and vice versa.
 
-	//==============================================================================
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DopplerAudioProcessor)
 };

@@ -17,18 +17,16 @@ Point<float> soundEmitterLocationXY;
 DopplerAudioProcessor::DopplerAudioProcessor() // constructor
 #ifndef JucePlugin_PreferredChannelConfigurations
 	: AudioProcessor(BusesProperties()
-		#if ! JucePlugin_IsMidiEffect
-			#if ! JucePlugin_IsSynth
-				.withInput("Input", AudioChannelSet::stereo(), true)
-			#endif
-			.withOutput("Output", AudioChannelSet::stereo(), true)
-		#endif
+#if ! JucePlugin_IsMidiEffect
+#if ! JucePlugin_IsSynth
+		.withInput("Input", AudioChannelSet::stereo(), true)
+#endif
+		.withOutput("Output", AudioChannelSet::stereo(), true)
+#endif
 	), treeState(*this, nullptr, "Parameters", createParameters()), Timer()
 #endif
 {
-	internalInterpolatorPoint.setXY(0.0f, 0.0f);
 	Timer::startTimerHz(60);
-	//Timer::startTimer(16);
 }
 
 //==============================================================================
@@ -97,16 +95,13 @@ void DopplerAudioProcessor::changeProgramName(int index, const String& newName)
 //==============================================================================
 void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-	globalSampleRate = getSampleRate();
+	globalSampleRate = getSampleRate(); 
 
 	dsp::ProcessSpec spec;
 	spec.sampleRate = sampleRate;
 	spec.maximumBlockSize = samplesPerBlock;
 	spec.numChannels = getTotalNumOutputChannels();
 
-
-	lowPassFilter.prepare(spec);
-	lowPassFilter.reset();
 }
 
 void DopplerAudioProcessor::releaseResources()
@@ -139,14 +134,6 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 }
 #endif
 
-void DopplerAudioProcessor::updateFilter()
-{
-	auto freq = jmap(distance[1], 0.0f, 150.0f, 20000.0f, 500.0f); // primitive way of calculating cutoff
-	float res = 0.9;
-
-	*lowPassFilter.state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, freq, res); // set filter state
-}
-
 void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
 	auto distanceValue = treeState.getRawParameterValue(DISTANCE_ID);
@@ -178,10 +165,6 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	for (int channel = 0; channel < totalNumInputChannels; ++channel) // for each channel in the block
 	{
 		auto* channelData = buffer.getWritePointer(channel);
-
-		dsp::AudioBlock <float> block(buffer);
-		updateFilter();
-		lowPassFilter.process(dsp::ProcessContextReplacing<float>(block)); // basic filtering
 
 		for (int sample = 0; sample < buffer.getNumSamples(); ++sample) // for each sample in the channel
 		{
@@ -243,7 +226,7 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 	auto distanceParameter = std::make_unique<AudioParameterFloat>(DISTANCE_ID, DISTANCE_NAME, 5.0f, 50.0f, 9.0f);
 	params.push_back(std::move(distanceParameter));
 
-	return { params.begin(), params.end() }; 
+	return { params.begin(), params.end() };
 }
 
 float DopplerAudioProcessor::distanceCalculate()
@@ -278,7 +261,6 @@ float DopplerAudioProcessor::delayCalculate()
 float DopplerAudioProcessor::velocityCalculate()
 {
 	// basically just calculating the difference between the current and last distances for L / R
-
 	static float lastDistance[2] = { 0,0 };
 
 	for (int channel = 0; channel < 2; channel++)
@@ -293,14 +275,20 @@ float DopplerAudioProcessor::velocityCalculate()
 
 void DopplerAudioProcessor::timerCallback()
 {
+	// interpolation variables
+	static Point<float> internalInterpolatorPoint; // internal interpolated point (and set to 0,0 to avoid errors)
+	static Point<float> interpolationMovementAmount;
+	static float interpolationTime;
+	static float interpolationRemaining;
+
 	// get X / Y coordinate parameters
-	
 	auto xCoordinate = treeState.getRawParameterValue(X_ID);
 	auto yCoordinate = treeState.getRawParameterValue(Y_ID);
 
 	// declare smoothing value
 	auto smoothingValue = treeState.getRawParameterValue(SMOOTH_ID);
 
+	// perform interpolation (nonlinear, *kind of* exponential)
 	Point<float> diff;
 	diff.setXY(xCoordinate[0] - (internalInterpolatorPoint.getX() - 0.0f), yCoordinate[0] - (internalInterpolatorPoint.getY() - 0.0f));
 
@@ -309,6 +297,7 @@ void DopplerAudioProcessor::timerCallback()
 	interpolationMovementAmount.setXY(diff.getX() * timePortion, diff.getY() * timePortion);
 	internalInterpolatorPoint += interpolationMovementAmount;
 
+	// set the global value to whatever the internal interpolated point is for this loop
 	soundEmitterLocationXY.setXY(internalInterpolatorPoint.getX(), internalInterpolatorPoint.getY());
 }
 
