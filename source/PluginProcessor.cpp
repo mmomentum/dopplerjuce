@@ -26,6 +26,8 @@ DopplerAudioProcessor::DopplerAudioProcessor() // constructor
 	), treeState(*this, nullptr, "Parameters", createParameters()), Timer()
 #endif
 {
+	globalSampleRate = getSampleRate();
+
 	Timer::startTimerHz(60);
 }
 
@@ -93,15 +95,11 @@ void DopplerAudioProcessor::changeProgramName(int index, const String& newName)
 }
 
 //==============================================================================
+
 void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-	globalSampleRate = getSampleRate(); 
-
-	dsp::ProcessSpec spec;
-	spec.sampleRate = sampleRate;
-	spec.maximumBlockSize = samplesPerBlock;
-	spec.numChannels = getTotalNumOutputChannels();
-
+	delay.setChannelCount(getChannelCountOfBus(true, 0));
+	channelCountInv = 1.f / float(getChannelCountOfBus(true, 0));
 }
 
 void DopplerAudioProcessor::releaseResources()
@@ -136,40 +134,20 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 
 void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-	auto distanceValue = treeState.getRawParameterValue(DISTANCE_ID);
-
-	ScopedNoDenormals noDenormals;
-	auto totalNumInputChannels = getTotalNumInputChannels();
-	auto totalNumOutputChannels = getTotalNumOutputChannels();
-
 	distanceCalculate();
+	delayCalculate();
 
-	// In case we have more outputs than inputs, this code clears any output
-	// channels that didn't contain input data, (because these aren't
-	// guaranteed to be empty - they may contain garbage).
-	// This is here to avoid people getting screaming feedback
-	// when they first compile a plugin, but obviously you don't need to keep
-	// this code if your algorithm always overwrites all the output channels.
-	for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
-		buffer.clear(i, 0, buffer.getNumSamples());
+	// simple delay processing section (all of the heavy lifting is done in DelayBuffer.h)
 
-	// This is the place where you'd normally do the guts of your plugin's
-	// audio processing...
-	// Make sure to reset the state if your inner loop is processing
-	// the samples and the outer loop is handling the channels.
-	// Alternatively, you can process the samples with the channels
-	// interleaved by keeping the same state.
+	delay.setDestination(delaySamples[0]);
 
-
-
-	for (int channel = 0; channel < totalNumInputChannels; ++channel) // for each channel in the block
-	{
-		auto* channelData = buffer.getWritePointer(channel);
-
-		for (int sample = 0; sample < buffer.getNumSamples(); ++sample) // for each sample in the channel
-		{
-			channelData[sample] = channelData[sample] * jmap((float)distanceValue[0], 5.0f, 50.0f, 0.0f, 1.0f); // basic attenuation (currently controlling via the jmap distance slider)
+	for (auto s = 0; s < buffer.getNumSamples(); ++s) {
+		for (auto ch = 0; ch < buffer.getNumChannels(); ++ch) {
+			auto& sample = *buffer.getWritePointer(ch, s);
+			delay.write(sample, ch);
+			sample += delay.readDelayValue(ch);
 		}
+		++delay;
 	}
 }
 
@@ -205,7 +183,6 @@ AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 	return new DopplerAudioProcessor();
 }
 
-
 // for our parameters. more parameters and types can be added relatively easily
 AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParameters()
 {
@@ -234,12 +211,12 @@ float DopplerAudioProcessor::distanceCalculate()
 	auto sizeValue = treeState.getRawParameterValue(SIZE_ID); // size of plane (meters)
 	auto distanceValue = treeState.getRawParameterValue(DISTANCE_ID); // spacing distance between pickup points (meters)
 
-	double distanceValueMeters = distanceValue[0] / 100.0; // divide down into centimeters once instead of four times per function call
+	double distanceValueMeters = distanceValue[0] / 100.0f; // divide down into centimeters once instead of four times per function call
 
 	Point<float> soundEmitterLocationMeters; // point for the actual ACTUAL location (in meters instead of an arbitrary -1 - +1 range) 
 
 	// multiply to the actual size
-	soundEmitterLocationMeters.setXY((soundEmitterLocationXY.getX() * sizeValue[0]), (soundEmitterLocationXY.getY() * sizeValue[0]));
+	soundEmitterLocationMeters.setXY((internalInterpolatorPoint.getX() * sizeValue[0]), (internalInterpolatorPoint.getY() * sizeValue[0]));
 
 	// pythagorean theorem to get the distance values on our 2D plane
 	distance[0] = sqrt(square(distanceValueMeters - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY()));
@@ -252,8 +229,9 @@ float DopplerAudioProcessor::delayCalculate()
 {
 	// calculate delay times in samples by dividing distance by the speed
 	// of sound in meters and then multiplying it by the current sample rate.
-	for (int channel = 0; channel < 2; channel++)
-		delay[channel] = roundToInt((distance[channel] / SPEED_OF_SOUND) * globalSampleRate);
+	for (auto channel = 0; channel < getNumOutputChannels(); ++channel)
+		//delaySamples[channel] = roundToInt((distance[channel] / SPEED_OF_SOUND) * globalSampleRate);
+		delaySamples[channel] = (distance[channel] / SPEED_OF_SOUND) * globalSampleRate;
 
 	return 0;
 }
@@ -263,7 +241,7 @@ float DopplerAudioProcessor::velocityCalculate()
 	// basically just calculating the difference between the current and last distances for L / R
 	static float lastDistance[2] = { 0,0 };
 
-	for (int channel = 0; channel < 2; channel++)
+	for (auto channel = 0; channel < getNumOutputChannels(); ++channel)
 	{
 		velocity[channel] = (distance[channel] - lastDistance[channel]) * 60.0f; // multiply by # of calls of timer per second
 
@@ -273,10 +251,11 @@ float DopplerAudioProcessor::velocityCalculate()
 	return 0;
 }
 
+//==============================================================================
+
 void DopplerAudioProcessor::timerCallback()
 {
 	// interpolation variables
-	static Point<float> internalInterpolatorPoint; // internal interpolated point (and set to 0,0 to avoid errors)
 	static Point<float> interpolationMovementAmount;
 	static float interpolationTime;
 	static float interpolationRemaining;
@@ -299,7 +278,12 @@ void DopplerAudioProcessor::timerCallback()
 
 	// set the global value to whatever the internal interpolated point is for this loop
 	soundEmitterLocationXY.setXY(internalInterpolatorPoint.getX(), internalInterpolatorPoint.getY());
+
+	//distanceCalculate();
+	//delayCalculate();
 }
+
+//==============================================================================
 
 DopplerAudioProcessor::~DopplerAudioProcessor() // destructor
 {

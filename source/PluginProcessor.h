@@ -14,6 +14,8 @@
 
 #include "GlobalVariables.h"
 
+#include "DelayBuffer.h"
+
 #define X_ID "x"
 #define X_NAME "x"
 
@@ -31,7 +33,9 @@
 
 //==============================================================================
 
-class DopplerAudioProcessor : public AudioProcessor, public Timer
+class DopplerAudioProcessor : 
+	public AudioProcessor, 
+	public Timer
 {
 public:
 
@@ -85,18 +89,38 @@ public:
 	// calculate velocity (in meters / second) for FFT based doppler
 	float velocityCalculate();
 
+	//==============================================================================
+
 	AudioProcessorValueTreeState treeState;
 	AudioProcessorValueTreeState::ParameterLayout createParameters();
 
 private:
-	//==============================================================================
+
+	float rateParam { 1.0f };
+
+	float channelCountInv;
 
 	int globalSampleRate; // sets to whatever our current sample rate is
 
+	Point<float> internalInterpolatorPoint = { 0,0 }; // internal interpolated point (and set to 0,0 to avoid errors)
+
 	// various physical values used by the audio processor systems
 	float distance[2]; // calculated distance values (in meters)
-	int delay[2]; // calculated delay values (in samples)
+	int delaySamples[2]; // calculated delay values (in samples)
 	float velocity[2]; // calculated velocity values (in m/s). positive values = moving towards you and vice versa.
+
+	//==============================================================================
+
+	//HDL::SimpleDelay<float> delay;
+	//HDL::SimpleBiDelay<float> delay;
+	//HDL::SpeedDelay<float> delay;
+	//HDL::SpeedMixDelay<float> delay;
+	//HDL::AcceleratorDelay<float> delay;
+	//HDL::MixDelay<float> delay;
+	//HDL::MixBiDelay<float> delay;
+	//HDL::MixBiSlewDelay<float> delay;
+	HDL::SineDelay<float> delay;
+	//HDL::WobblyDelay<float> delay;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DopplerAudioProcessor)
 };

@@ -28,7 +28,9 @@
       <FILE id="aY1jbx" name="InterfaceDefines.h" compile="0" resource="0"
             file="source/InterfaceDefines.h"/>
     </GROUP>
-    <GROUP id="{3ABCDAE5-FBC2-E3F0-61C7-024EE181F989}" name="Processing"/>
+    <GROUP id="{3ABCDAE5-FBC2-E3F0-61C7-024EE181F989}" name="Processing">
+      <FILE id="yzDuun" name="DelayBuffer.h" compile="0" resource="0" file="source/DelayBuffer.h"/>
+    </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
     <VS2017 targetFolder="Builds/VisualStudio2017">
