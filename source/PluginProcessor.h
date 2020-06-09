@@ -84,7 +84,7 @@ public:
 	float distanceCalculate(); 
 
 	// calclate delay times (in samples) for IATD L / R delays (works using distanceCalculate())
-	float delayCalculate(); 
+	int delayCalculate(int channel, int sampleRate); 
 
 	// calculate velocity (in meters / second) for FFT based doppler
 	float velocityCalculate(int channel);
