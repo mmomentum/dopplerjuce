@@ -26,8 +26,6 @@ DopplerAudioProcessor::DopplerAudioProcessor() // constructor
 	), treeState(*this, nullptr, "Parameters", createParameters()), Timer()
 #endif
 {
-	globalSampleRate = getSampleRate();
-
 	Timer::startTimerHz(60);
 }
 
@@ -134,10 +132,13 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 
 void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-	distanceCalculate();
-	delayCalculate();
-
 	// simple delay processing section (all of the heavy lifting is done in DelayBuffer.h)
+
+	static int globalSampleRate = getSampleRate();
+
+	distanceCalculate();
+	
+	int tempdelay = delayCalculate(0, globalSampleRate);
 
 	delay.setDestination(delaySamples[0]);
 
@@ -225,30 +226,25 @@ float DopplerAudioProcessor::distanceCalculate()
 	return 0;
 }
 
-float DopplerAudioProcessor::delayCalculate()
+int DopplerAudioProcessor::delayCalculate(int channel, int sampleRate)
 {
 	// calculate delay times in samples by dividing distance by the speed
 	// of sound in meters and then multiplying it by the current sample rate.
-	for (auto channel = 0; channel < getNumOutputChannels(); ++channel)
-		//delaySamples[channel] = roundToInt((distance[channel] / SPEED_OF_SOUND) * globalSampleRate);
-		delaySamples[channel] = (distance[channel] / SPEED_OF_SOUND) * globalSampleRate;
 
-	return 0;
+	delaySamples[channel] = roundToInt((distance[channel] / SPEED_OF_SOUND) * sampleRate);
+
+	return delaySamples[channel];
 }
 
-float DopplerAudioProcessor::velocityCalculate()
+float DopplerAudioProcessor::velocityCalculate(int channel)
 {
 	// basically just calculating the difference between the current and last distances for L / R
 	static float lastDistance[2] = { 0,0 };
 
-	for (auto channel = 0; channel < getNumOutputChannels(); ++channel)
-	{
-		velocity[channel] = (distance[channel] - lastDistance[channel]) * 60.0f; // multiply by # of calls of timer per second
+	velocity[channel] = (distance[channel] - lastDistance[channel]) * 60.0f; // multiply by # of calls of timer per second
+	lastDistance[channel] = distance[channel];
 
-		lastDistance[channel] = distance[channel];
-	}
-
-	return 0;
+	return velocity[channel];
 }
 
 //==============================================================================
@@ -279,8 +275,6 @@ void DopplerAudioProcessor::timerCallback()
 	// set the global value to whatever the internal interpolated point is for this loop
 	soundEmitterLocationXY.setXY(internalInterpolatorPoint.getX(), internalInterpolatorPoint.getY());
 
-	//distanceCalculate();
-	//delayCalculate();
 }
 
 //==============================================================================

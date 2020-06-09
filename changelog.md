@@ -1,3 +1,10 @@
+### 08/06/2020
+#### aidan
+- making progress on various elements of the project in the last week or so;
+- fixed the interpolator issue.
+- implemented a somewhat well working "read-head-interpolated" delay buffer system and integrated it within the doppler's physics system. I designed a few different systems for implementing the interpolation, and they all have thier upsides and downsides (not all of them are stable).
+- redesigned and improved the transporability of a lot of the calculate() functions.
+---
 ### 26/05/2020
 #### aidan
 - realised today while making the velocity calculator that the interpolation timer system stops working when the GUI is closed because plugineditor files are only supposed to be there for the visuals, they stop running when the GUI is closed.

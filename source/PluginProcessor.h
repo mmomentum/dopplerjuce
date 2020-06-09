@@ -87,7 +87,7 @@ public:
 	float delayCalculate(); 
 
 	// calculate velocity (in meters / second) for FFT based doppler
-	float velocityCalculate();
+	float velocityCalculate(int channel);
 
 	//==============================================================================
 
@@ -99,8 +99,6 @@ private:
 	float rateParam { 1.0f };
 
 	float channelCountInv;
-
-	int globalSampleRate; // sets to whatever our current sample rate is
 
 	Point<float> internalInterpolatorPoint = { 0,0 }; // internal interpolated point (and set to 0,0 to avoid errors)
 
@@ -114,12 +112,12 @@ private:
 	//HDL::SimpleDelay<float> delay;
 	//HDL::SimpleBiDelay<float> delay;
 	//HDL::SpeedDelay<float> delay;
-	//HDL::SpeedMixDelay<float> delay;
+	HDL::SpeedMixDelay<float> delay;
 	//HDL::AcceleratorDelay<float> delay;
 	//HDL::MixDelay<float> delay;
 	//HDL::MixBiDelay<float> delay;
 	//HDL::MixBiSlewDelay<float> delay;
-	HDL::SineDelay<float> delay;
+	//HDL::SineDelay<float> delay;
 	//HDL::WobblyDelay<float> delay;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DopplerAudioProcessor)

@@ -218,7 +218,7 @@ namespace HDL {
 	template <typename Type>
 	class SpeedMixDelay : public Delay<Type> {
 	public:
-		SpeedMixDelay(const float& speedI = 3.f, const float& mixI = 0.5f) :
+		SpeedMixDelay(const float& speedI = 3.f, const float& mixI = 1.0f) :
 			maxInv(1.f / float(size - 1)),
 			speed(speedI),
 			mix(mixI),
@@ -391,73 +391,5 @@ namespace HDL {
 		float speed;
 		float maxInv;
 		std::vector<Type> saw;
-	};
-
-	// // // visualizations // // //
-
-	template <typename Type>
-	class DelayPaint {
-	public:
-		// paints buffer to screen
-		static void paint(const Delay<Type>& delay, Graphics& g, const Rectangle<float>& bounds) {
-
-			// basic variables
-			auto x = bounds.getX();
-			auto y = bounds.getY();
-			auto width = bounds.getWidth();
-			auto height = bounds.getHeight();
-			auto size = delay.getSize();
-
-			// increment values for each index
-			auto iX = x;
-			auto iWidth = width / size;
-
-			// prepare text output
-			g.setFont(16.f);
-
-			// make delay data (more) useful for visualization
-			auto dest = delay.getDestination();
-			auto destF = int(dest);
-			auto destC = destF + 1;
-			auto destFr = dest - destF;
-			auto dly = delay.getDelay();
-			auto dlyF = int(dly);
-			auto dlyC = dlyF + 1;
-			auto dlyFr = dly - dlyF;
-
-			// set delay data colours
-			auto baseColour = Colours::darkblue.brighter(1.f);
-			auto noColour = baseColour.darker(4.f).withSaturation(.2f);
-			auto destColour = Colours::seagreen.withMultipliedSaturation(2.f);
-			auto dlyColour = Colours::yellow.withSaturation(.5f);
-
-			// buffer loop
-			for (auto i = 0; i < size; ++i) {
-				// draw basic rectangles for each index
-				Rectangle<float> iArea(iX, y, iWidth, height);
-				auto reducedArea = iArea.reduced(3.f);
-
-				if (i == dlyF) // if i == current delay
-					g.setColour(baseColour.interpolatedWith(dlyColour, 1.f - dlyFr));
-				else if (i == dlyC)
-					g.setColour(baseColour.interpolatedWith(dlyColour, dlyFr));
-				else if (i == destF) // if i == destination of delay
-					g.setColour(baseColour.interpolatedWith(destColour, 1.f - destFr));
-				else if (i == destC)
-					g.setColour(baseColour.interpolatedWith(destColour, destFr));
-				else // if i == fresh or any other sample in buffer
-					g.setColour(baseColour);
-
-				g.fillRect(reducedArea);
-				iX += iWidth;
-
-				baseColour = noColour;
-
-				// print sample-values
-				g.setColour(Colours::lightblue);
-				auto sampleValue = std::rint(delay.read(i) * 10.f) * .1f; // reduce decimals for readability
-				g.drawFittedText(String(sampleValue), reducedArea.toNearestInt(), Justification::centredTop, 2, 0.f);
-			}
-		}
 	};
 }
