@@ -98,6 +98,9 @@ void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 {
 	delay.setChannelCount(getChannelCountOfBus(true, 0));
 	channelCountInv = 1.f / float(getChannelCountOfBus(true, 0));
+
+
+	channelCountInv = 1.0f;
 }
 
 void DopplerAudioProcessor::releaseResources()
@@ -137,10 +140,8 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	static int globalSampleRate = getSampleRate();
 
 	distanceCalculate();
-	
-	int tempdelay = delayCalculate(0, globalSampleRate);
 
-	delay.setDestination(delaySamples[0]);
+	delay.setDestination(delayCalculate(0, globalSampleRate)); // use L delay for now
 
 	for (auto s = 0; s < buffer.getNumSamples(); ++s) {
 		for (auto ch = 0; ch < buffer.getNumChannels(); ++ch) {

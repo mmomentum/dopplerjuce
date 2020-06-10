@@ -113,11 +113,11 @@ private:
 	//HDL::SimpleBiDelay<float> delay;
 	//HDL::SpeedDelay<float> delay;
 	HDL::SpeedMixDelay<float> delay;
-	//HDL::AcceleratorDelay<float> delay;
+	//HDL::AcceleratorDelay<float> delayL;
 	//HDL::MixDelay<float> delay;
 	//HDL::MixBiDelay<float> delay;
 	//HDL::MixBiSlewDelay<float> delay;
-	//HDL::SineDelay<float> delay;
+	//HDL::SineDelay<float> delay[2];
 	//HDL::WobblyDelay<float> delay;
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DopplerAudioProcessor)

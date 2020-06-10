@@ -6,7 +6,7 @@ namespace HDL {
 	template <typename Type>
 	class Buffer {
 	public:
-		Buffer():
+		Buffer() :
 			buffer(2)
 		{
 		}
@@ -315,7 +315,7 @@ namespace HDL {
 			auto distance = dIdx - cIdx;
 			curSpeed = distance < 0.f ?
 				mixUp * distance : mixDown * distance;
-			
+
 			if (std::abs(curSpeed - lastSpeed) > slew)
 				curSpeed = lastSpeed;
 
@@ -373,13 +373,13 @@ namespace HDL {
 					normalizer = absPhase;
 			}
 			normalizer = 1.f / normalizer; // normalizing
-			for (auto& i: saw)
+			for (auto& i : saw)
 				i *= normalizer;
 		}
 
 		void follow() override {
 			auto relDistance = (dIdx - cIdx) * maxInv;
-			
+
 			auto tIdx = int(relDistance * speed * 255.f);
 			if (relDistance < 0.f)
 				cIdx -= saw[-tIdx];
