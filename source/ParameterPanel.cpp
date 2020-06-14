@@ -39,7 +39,7 @@ ParameterPanel::ParameterPanel(DopplerAudioProcessor& p)
 	smoothSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, SMOOTH_ID, smoothSlider);
 
 	// knob for setting distance between listening points (in cm)
-	distanceSlider.setRange(5.0f, 50.0f);
+	distanceSlider.setRange(5.0f, 100.0f);
 	distanceSlider.setValue(9.0f);
 	distanceSlider.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
 	distanceSlider.setTextBoxStyle(Slider::TextBoxBelow, true, 60, 20);

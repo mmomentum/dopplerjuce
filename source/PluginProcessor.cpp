@@ -96,11 +96,12 @@ void DopplerAudioProcessor::changeProgramName(int index, const String& newName)
 
 void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-	delay.setChannelCount(getChannelCountOfBus(true, 0));
+	delay[0].setChannelCount(getChannelCountOfBus(true, 0));
+	delay[1].setChannelCount(getChannelCountOfBus(true, 0));
 	channelCountInv = 1.f / float(getChannelCountOfBus(true, 0));
 
 
-	channelCountInv = 1.0f;
+	//channelCountInv = 1.0f;
 }
 
 void DopplerAudioProcessor::releaseResources()
@@ -135,22 +136,37 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 
 void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
-	// simple delay processing section (all of the heavy lifting is done in DelayBuffer.h)
+	// declare statics nescessary for processing audio once instead of running a
+	// function to get them for every time they're needed (and each block cycle)
 
 	static int globalSampleRate = getSampleRate();
+	static int blockSize = buffer.getNumSamples();
+	static int blockChannels = buffer.getNumChannels();
 
-	distanceCalculate();
+	// simple delay processing section (all of the heavy lifting is done in DelayBuffer.h)
 
-	delay.setDestination(delayCalculate(0, globalSampleRate)); // use L delay for now
+	distanceCalculate(); // calculate distance from sound emitter to L / R listening points
 
-	for (auto s = 0; s < buffer.getNumSamples(); ++s) {
-		for (auto ch = 0; ch < buffer.getNumChannels(); ++ch) {
-			auto& sample = *buffer.getWritePointer(ch, s);
-			delay.write(sample, ch);
-			sample += delay.readDelayValue(ch);
+	float** delayBufferSample = new float*[2]; // sample pointers for our two delay buffers
+
+	delay[0].setDestination(delayCalculate(0, globalSampleRate)); // set buffer delays
+	delay[1].setDestination(delayCalculate(1, globalSampleRate)); 
+
+	for (unsigned int channel = 0; channel < blockChannels; channel++) // for each channel in the block
+	{
+
+		for (auto blockSample = 0; blockSample < blockSize; ++blockSample) { // for each sample in the channel
+
+			delayBufferSample[channel] = buffer.getWritePointer(channel, blockSample);
+			delay[channel].write(*delayBufferSample[channel], channel);
+			*delayBufferSample[channel] += delay[channel].readDelayValue(channel);
+
+			++delay[channel]; // increment delay 
 		}
-		++delay;
 	}
+
+	//delete delayBufferSample[1];
+	//delete delayBufferSample[0];
 }
 
 //==============================================================================
@@ -202,7 +218,7 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 	auto smoothParameter = std::make_unique<AudioParameterInt>(SMOOTH_ID, SMOOTH_NAME, 100, 5000, 500);
 	params.push_back(std::move(smoothParameter));
 
-	auto distanceParameter = std::make_unique<AudioParameterFloat>(DISTANCE_ID, DISTANCE_NAME, 5.0f, 50.0f, 9.0f);
+	auto distanceParameter = std::make_unique<AudioParameterFloat>(DISTANCE_ID, DISTANCE_NAME, 5.0f, 100.0f, 9.0f);
 	params.push_back(std::move(distanceParameter));
 
 	return { params.begin(), params.end() };
@@ -222,7 +238,7 @@ float DopplerAudioProcessor::distanceCalculate()
 
 	// pythagorean theorem to get the distance values on our 2D plane
 	distance[0] = sqrt(square(distanceValueMeters - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY()));
-	distance[1] = sqrt(square((distanceValueMeters * -1.0f) - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY()));
+	distance[1] = sqrt(square((distanceValueMeters * -1.0f) - soundEmitterLocationMeters.getX()) + square(soundEmitterLocationMeters.getY())); // inverted for Y a
 
 	return 0;
 }
@@ -275,7 +291,6 @@ void DopplerAudioProcessor::timerCallback()
 
 	// set the global value to whatever the internal interpolated point is for this loop
 	soundEmitterLocationXY.setXY(internalInterpolatorPoint.getX(), internalInterpolatorPoint.getY());
-
 }
 
 //==============================================================================

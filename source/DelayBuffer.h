@@ -218,7 +218,7 @@ namespace HDL {
 	template <typename Type>
 	class SpeedMixDelay : public Delay<Type> {
 	public:
-		SpeedMixDelay(const float& speedI = 3.f, const float& mixI = 1.0f) :
+		SpeedMixDelay(const float& speedI = 3.0f, const float& mixI = 1.0f) :
 			maxInv(1.f / float(size - 1)),
 			speed(speedI),
 			mix(mixI),

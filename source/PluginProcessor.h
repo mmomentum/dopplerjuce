@@ -112,8 +112,8 @@ private:
 	//HDL::SimpleDelay<float> delay;
 	//HDL::SimpleBiDelay<float> delay;
 	//HDL::SpeedDelay<float> delay;
-	HDL::SpeedMixDelay<float> delay;
-	//HDL::AcceleratorDelay<float> delayL;
+	HDL::SpeedMixDelay<float> delay[2];
+	//HDL::AcceleratorDelay<float> delay[2];
 	//HDL::MixDelay<float> delay;
 	//HDL::MixBiDelay<float> delay;
 	//HDL::MixBiSlewDelay<float> delay;
