@@ -17,12 +17,17 @@
 
 #include "PluginProcessor.h"
 
+#include "LookAndFeel.h"
+
 //==============================================================================
 /*
 */
 class PadXY : public Component, public Slider::Listener, public Timer
 {
-	Rectangle<float> padConstraints;
+	Rectangle<float> padConstraints, dotConstraints;
+
+	float constrainFactor = 0.075f, constrainAmount;
+
 	float x_min, x_max, y_min, y_max, x_val, y_val;
 
 	bool rightMouseButtonDown = false;
@@ -108,6 +113,8 @@ private:
 	// SmoothedValue<float> xSmoothed, ySmoothed;
 
 	int cornerSize = 10; // rounding of rectangular XY pad boundaries
+
+	look::sliderXYLAF SliderXYLAF;
 
 	DopplerAudioProcessor& processor;
 

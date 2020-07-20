@@ -20,7 +20,7 @@ DopplerAudioProcessorEditor::DopplerAudioProcessorEditor(DopplerAudioProcessor& 
 	// xy pad panel
 	padxy = std::make_unique<PadXY>(p);
 	addAndMakeVisible(*padxy); 
-	padxy->setBounds(BORDER_SIZE, BORDER_SIZE, XY_PAD_WIDTH - (BORDER_SIZE * 2), XY_PAD_HEIGHT - (BORDER_SIZE * 2));
+	padxy->setBounds(0, 0, XY_PAD_WIDTH, XY_PAD_HEIGHT);
 
 	// parameter panel
 	parampanel = std::make_unique<ParameterPanel>(p);

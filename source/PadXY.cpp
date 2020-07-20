@@ -18,12 +18,17 @@
 PadXY::PadXY(DopplerAudioProcessor& p)
 	: Component(), processor(p), Slider::Listener(), Timer()
 {
+	setSize(XY_PAD_WIDTH, XY_PAD_HEIGHT);
+
+	dotConstraints.setSize(getWidth(), getHeight());
+
 	// add X / Y sliders
 	xSlider.setRange(-1.0f, 1.0f);
 	xSlider.setValue(0.0f);
 	xSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
 	xSlider.setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 	xSlider.addListener(this);
+	xSlider.setLookAndFeel(&SliderXYLAF);
 	addAndMakeVisible(&xSlider);
 
 	xSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, X_ID, xSlider);
@@ -33,6 +38,7 @@ PadXY::PadXY(DopplerAudioProcessor& p)
 	ySlider.setSliderStyle(Slider::SliderStyle::LinearVertical);
 	ySlider.setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 	ySlider.addListener(this);
+	ySlider.setLookAndFeel(&SliderXYLAF);
 	addAndMakeVisible(&ySlider);
 
 	ySliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, Y_ID, ySlider);
@@ -48,7 +54,6 @@ PadXY::PadXY(DopplerAudioProcessor& p)
 	yLabel.setJustificationType(Justification::centred);
 	addAndMakeVisible(yLabel);
 
-	setSize(XY_PAD_WIDTH, XY_PAD_HEIGHT);
 
 	addAndMakeVisible(dotTarget);
 	setPositionAsValue(dotTarget.getPosition().toFloat());
@@ -65,6 +70,9 @@ PadXY::PadXY(DopplerAudioProcessor& p)
 
 	xLabel.setText(String("0.000", 5), dontSendNotification);
 	yLabel.setText(String("0.000", 5), dontSendNotification);
+
+	xLabel.setFont(Font ("Roboto Mono", 16.00f, Font::plain));
+	yLabel.setFont(Font ("Roboto Mono", 16.00f, Font::plain));
 
 	// start timer
 
@@ -84,8 +92,8 @@ void PadXY::mouseDown(const MouseEvent& e)
 
 	currentMouseXY = dotTarget.getPosition().toFloat();
 
-	xSlider.setValue(jmap(currentMouseXY.getX(), 0.0f, padConstraints.getWidth() - (BORDER_SIZE)-0.0f, -1.0f, 1.0f));
-	ySlider.setValue(jmap(currentMouseXY.getY(), 0.0f, padConstraints.getHeight() - (BORDER_SIZE)-0.0f, 1.0f, -1.0f));
+	xSlider.setValue(jmap(currentMouseXY.getX(), constrainAmount, padConstraints.getWidth()- (constrainAmount * 1.0f), -1.0f, 1.0f));
+	ySlider.setValue(jmap(currentMouseXY.getY(), constrainAmount, padConstraints.getHeight() - (constrainAmount * 1.0f), 1.0f, -1.0f));
 }
 
 void PadXY::mouseDrag(const MouseEvent& e)
@@ -106,8 +114,8 @@ void PadXY::mouseDrag(const MouseEvent& e)
 		//ySmoothed.setTargetValue(currentMouseXY.getY());
 
 		// figure out how to use getvalues for the width as it doesnt accept them currently
-		xSlider.setValue(jmap(currentMouseXY.getX(), 0.0f, padConstraints.getWidth() - (BORDER_SIZE)-0.0f, -1.0f, 1.0f));
-		ySlider.setValue(jmap(currentMouseXY.getY(), 0.0f, padConstraints.getHeight() - (BORDER_SIZE)-0.0f, 1.0f, -1.0f));
+		xSlider.setValue(jmap(currentMouseXY.getX(), constrainAmount, padConstraints.getWidth() - (constrainAmount * 1.0f), -1.0f, 1.0f));
+		ySlider.setValue(jmap(currentMouseXY.getY(), constrainAmount, padConstraints.getHeight() - (constrainAmount * 1.0f), 1.0f, -1.0f));
 	}
 
 	mouseDragging = false;
@@ -127,16 +135,16 @@ void PadXY::mouseExit(const MouseEvent& e)
 
 Point<int> PadXY::constrainPosition(float x, float y)
 {
-	const float xPos = jlimit(padConstraints.getX(), (padConstraints.getWidth() + padConstraints.getX()) - dotTarget.getWidth(), x - dotTarget.getWidth() / 2.f);
-	const float yPos = jlimit(padConstraints.getY(), (padConstraints.getHeight() + padConstraints.getY()) - dotTarget.getHeight(), y - dotTarget.getHeight() / 2.f);
+	const float xPos = jlimit(dotConstraints.getX(), (dotConstraints.getWidth() + dotConstraints.getX()) - dotTarget.getWidth(), x - dotTarget.getWidth() / 2.f);
+	const float yPos = jlimit(dotConstraints.getY(), (dotConstraints.getHeight() + dotConstraints.getY()) - dotTarget.getHeight(), y - dotTarget.getHeight() / 2.f);
 
 	return Point<int>(xPos, yPos);
 }
 
 Point<int> PadXY::getValueAsPosition(float x, float y)
 {
-	const float xPos = jmap(x, padConstraints.getX(), (padConstraints.getWidth() + padConstraints.getX()) - dotTarget.getWidth());
-	const float yPos = jmap(y, padConstraints.getY(), (padConstraints.getHeight() + padConstraints.getY()) - dotTarget.getHeight());
+	const float xPos = jmap(x, dotConstraints.getX(), (dotConstraints.getWidth() + dotConstraints.getX()) - dotTarget.getWidth());
+	const float yPos = jmap(y, dotConstraints.getY(), (dotConstraints.getHeight() + dotConstraints.getY()) - dotTarget.getHeight());
 
 	if (yInvert) y = y_max - y;
 
@@ -145,8 +153,8 @@ Point<int> PadXY::getValueAsPosition(float x, float y)
 
 void PadXY::setPositionAsValue(Point<float> position)
 {
-	const float xVal = jlimit(x_min, x_max, jmap(position.getX(), padConstraints.getX(), padConstraints.getWidth() - dotTarget.getWidth(), x_min, x_max));
-	float       yVal = jlimit(y_min, y_max, jmap(position.getY(), padConstraints.getY(), padConstraints.getHeight() - dotTarget.getHeight(), y_min, y_max));
+	const float xVal = jlimit(x_min, x_max, jmap(position.getX(), dotConstraints.getX(), dotConstraints.getWidth() - dotTarget.getWidth(), x_min, x_max));
+	float       yVal = jlimit(y_min, y_max, jmap(position.getY(), dotConstraints.getY(), dotConstraints.getHeight() - dotTarget.getHeight(), y_min, y_max));
 
 	if (yInvert) yVal = y_max - yVal;
 }
@@ -167,16 +175,16 @@ void PadXY::sliderValueChanged(Slider* slider)
 	// set slider control values to the dot's graphical position
 	if (mouseDragging == false)
 	{
-		dotTarget.setCentrePosition(jmap((float)xSlider.getValue(), -1.0f, 1.0f, 10.0f, (XY_PAD_WIDTH - 50.0f)), 
-									jmap((float)ySlider.getValue() * -1.0f, -1.0f, 1.0f, 10.0f, (XY_PAD_HEIGHT - 50.0f)));
+		dotTarget.setCentrePosition(jmap((float)xSlider.getValue(), -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_WIDTH - (constrainAmount * 1.0f) - cornerSize),
+									jmap((float)ySlider.getValue() * -1.0f, -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_HEIGHT - (constrainAmount * 1.0f) - cornerSize));
 	}
 }
 
 void PadXY::timerCallback()
 {
 	// set dot location
-	dotActual.setCentrePosition(jmap(soundEmitterLocationXY.getX(), -1.0f, 1.0f, 10.0f, (XY_PAD_WIDTH - 50.0f)),
-								jmap((soundEmitterLocationXY.getY() * -1.0f), -1.0f, 1.0f, 10.0f, (XY_PAD_HEIGHT - 50.0f)));
+	dotActual.setCentrePosition(jmap(soundEmitterLocationXY.getX(), -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_WIDTH - (constrainAmount * 1.0f) - cornerSize),
+								jmap(soundEmitterLocationXY.getY() * -1.0f, -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_HEIGHT - (constrainAmount * 1.0f) - cornerSize));
 
 	// seeing a bit of inaccuracy after the move to the audioprocessor but its probably just a jmap target range issue
 
@@ -190,18 +198,53 @@ void PadXY::timerCallback()
 
 void PadXY::paint(Graphics& g)
 {
-	// Text labels
-	g.setColour(Colours::white);
 
 	// XY background
 	padConstraints.setPosition(0, 0);
 	padConstraints.setSize(getWidth(), getHeight());
 
-	g.setColour(Colours::black);
+	g.setGradientFill(juce::ColourGradient(screenColorGradient, 0.0f, 0.0f,
+		screenColor, 256.0f, 184.0f, false));
+
 	g.fillRoundedRectangle(padConstraints, cornerSize);
 
-	g.setColour(Colours::white);
-	g.drawEllipse((padConstraints.getWidth() - 10)/ 2, (padConstraints.getHeight() - 10)/ 2, 10, 10, 3);
+	// fine details
+
+	
+
+	int rings = 12;
+
+	for (int i = 0; i <= rings; i++)
+	{
+		float step = (1.0f / rings);
+		float width = dotConstraints.getWidth() - constrainAmount;
+		float currentWidth = (width * (step * i));
+		float alpha = abs((step * i) - 1);
+
+		g.setColour(whiteColor.withAlpha(alpha));
+		g.drawEllipse((padConstraints.getWidth() - currentWidth) / 2, (padConstraints.getHeight() - currentWidth) / 2, currentWidth, currentWidth, 1.5f);
+	}
+
+	g.setColour(whiteColor);
+
+	g.drawRoundedRectangle(dotConstraints.reduced(constrainAmount), cornerSize, 1.5f);
+
+	g.setGradientFill(juce::ColourGradient(whiteColor.withAlpha(0.5f), getWidth() / 2, getHeight() / 2,
+		Colours::transparentWhite, constrainAmount * 1.5f, getWidth() / 2, true));
+
+	// would do this with normal lines but you cant do gradient fills with them
+
+	Path line;
+
+	// up / down
+	//line.startNewSubPath(dotConstraints.getWidth() / 2, constrainAmount);
+	//line.lineTo(dotConstraints.getWidth() / 2, dotConstraints.getHeight() - constrainAmount);
+
+	// left / right
+	//line.startNewSubPath(constrainAmount, dotConstraints.getHeight() / 2);
+	//line.lineTo(dotConstraints.getWidth() - constrainAmount, dotConstraints.getHeight() / 2);
+
+	//g.strokePath(line, { 1.5f, PathStrokeType::curved, PathStrokeType::rounded });
 }
 
 void PadXY::resized()
@@ -213,25 +256,25 @@ void PadXY::resized()
 	padConstraints.setLeft(getWidth() * .02);
 
 	// dot Target
-	dotTarget.setSize(20, 20);
+	dotTarget.setSize(cornerSize * 2, cornerSize * 2);
 	const Point<int> pos(getValueAsPosition(x_val, y_val));
 	dotTarget.setCentreRelative(0.5f, 0.5f);
 	dotTarget.setInterceptsMouseClicks(false, false);
-	dotTarget.setColour(Colours::grey);
-	dotTarget.setAlpha(0.8);
+	dotTarget.setColour(whiteColor.withAlpha(0.5f));
 
 	// dot Actual
-	dotActual.setSize(20, 20);
+	dotActual.setSize(cornerSize * 2, cornerSize * 2);
 	dotActual.setInterceptsMouseClicks(false, false);
-	dotActual.setColour(Colours::white);
-	dotActual.setAlpha(0.8);
+	dotActual.setColour(whiteColor);
 	dotActual.setCentreRelative(0.5f, 0.5f);
 
 	repaint();
 
+	constrainAmount = getWidth() * constrainFactor;
+
 	// slider bounds
-	xSlider.setBounds(BORDER_SIZE / 2, BORDER_SIZE / 4, getWidth() - BORDER_SIZE, BORDER_SIZE);
-	ySlider.setBounds(BORDER_SIZE / 4, BORDER_SIZE / 2, BORDER_SIZE / 4, getHeight() - BORDER_SIZE);
+	xSlider.setBounds(constrainAmount, 0, getWidth() - (constrainAmount * 2.0f), constrainAmount);
+	ySlider.setBounds(0, constrainAmount, constrainAmount, getHeight() - (constrainAmount * 2.0f));
 
 	// labels
 	xLabel.setBounds(0, padConstraints.getHeight(), getWidth() / 2, 20);
@@ -245,4 +288,6 @@ void PadXY::resized()
 PadXY::~PadXY()
 {
 	Timer::stopTimer();
+	xSlider.setLookAndFeel(nullptr);
+	ySlider.setLookAndFeel(nullptr);
 }

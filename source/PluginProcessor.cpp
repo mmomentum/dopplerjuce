@@ -11,6 +11,8 @@
 #include "PluginProcessor.h"
 #include "PluginEditor.h"
 
+#include "HRIR3D.h"
+
 Point<float> soundEmitterLocationXY;
 
 //==============================================================================
@@ -96,12 +98,15 @@ void DopplerAudioProcessor::changeProgramName(int index, const String& newName)
 
 void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-	delay[0].setChannelCount(getChannelCountOfBus(true, 0));
-	delay[1].setChannelCount(getChannelCountOfBus(true, 0));
-	channelCountInv = 1.f / float(getChannelCountOfBus(true, 0));
-
-
-	//channelCountInv = 1.0f;
+	spec.sampleRate = sampleRate;
+	spec.maximumBlockSize = samplesPerBlock;
+	spec.numChannels = 1;
+	IR_L.prepare(spec);
+	IR_R.prepare(spec);
+	updateHRIRFilter();
+	monoBuffer.setSize(1, samplesPerBlock);
+	IR_L.reset(); // reset the filter's processing pipeline, ready to start a new stream of data
+	IR_R.reset();
 }
 
 void DopplerAudioProcessor::releaseResources()
@@ -143,30 +148,24 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	static int blockSize = buffer.getNumSamples();
 	static int blockChannels = buffer.getNumChannels();
 
-	// simple delay processing section (all of the heavy lifting is done in DelayBuffer.h)
+	for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
+		buffer.clear(i, 0, buffer.getNumSamples());
 
 	distanceCalculate(); // calculate distance from sound emitter to L / R listening points
 
-	float** delayBufferSample = new float*[2]; // sample pointers for our two delay buffers
+	float angle = angleCalculator(soundEmitterLocationXY);
 
-	delay[0].setDestination(delayCalculate(0, globalSampleRate)); // set buffer delays
-	delay[1].setDestination(delayCalculate(1, globalSampleRate)); 
+	int elevation = 72;
+	theta = angle / 15 + elevation;
 
-	for (unsigned int channel = 0; channel < blockChannels; channel++) // for each channel in the block
-	{
+	auto bufferL = buffer.getWritePointer(0);
+	auto bufferR = buffer.getWritePointer(1);
 
-		for (auto blockSample = 0; blockSample < blockSize; ++blockSample) { // for each sample in the channel
-
-			delayBufferSample[channel] = buffer.getWritePointer(channel, blockSample);
-			delay[channel].write(*delayBufferSample[channel], channel);
-			*delayBufferSample[channel] += delay[channel].readDelayValue(channel);
-
-			++delay[channel]; // increment delay 
-		}
-	}
-
-	//delete delayBufferSample[1];
-	//delete delayBufferSample[0];
+	updateHRIRFilter();
+	dsp::AudioBlock<float> blockL = dsp::AudioBlock<float>(&bufferL, 1, blockSize);
+	dsp::AudioBlock<float> blockR = dsp::AudioBlock<float>(&bufferR, 1, blockSize);
+	IR_L.process(dsp::ProcessContextReplacing<float>(blockL));
+	IR_R.process(dsp::ProcessContextReplacing<float>(blockR));
 }
 
 //==============================================================================
@@ -264,6 +263,12 @@ float DopplerAudioProcessor::velocityCalculate(int channel)
 	return velocity[channel];
 }
 
+void DopplerAudioProcessor::updateHRIRFilter()
+{
+	*(IR_L.coefficients) = dsp::FIR::Coefficients<float>(hrir_l[theta], LEN);
+	*(IR_R.coefficients) = dsp::FIR::Coefficients<float>(hrir_r[theta], LEN);
+}
+
 //==============================================================================
 
 void DopplerAudioProcessor::timerCallback()
@@ -291,6 +296,7 @@ void DopplerAudioProcessor::timerCallback()
 
 	// set the global value to whatever the internal interpolated point is for this loop
 	soundEmitterLocationXY.setXY(internalInterpolatorPoint.getX(), internalInterpolatorPoint.getY());
+
 }
 
 //==============================================================================
