@@ -198,3 +198,9 @@ Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/link.
 Builds/VisualStudio2019/x64/Debug/Standalone Plugin/doppler_.916C7B04.tlog/link.6816-cvtres.read.1.tlog
 Builds/VisualStudio2019/x64/Debug/VST3/doppler_VST3.tlog/link.delete.1.tlog
 *.tlog
+Builds/VisualStudio2019/x64/Debug/Shared Code/r8bsrc.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/r8bbase.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/HilbertShifter.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/FirTable.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/calcErrorTable.obj
+Builds/VisualStudio2019/x64/Debug/Shared Code/BinaryData.obj

@@ -30,10 +30,14 @@
             file="source/InterfaceDefines.h"/>
     </GROUP>
     <GROUP id="{3ABCDAE5-FBC2-E3F0-61C7-024EE181F989}" name="DSP">
+      <FILE id="uX1i93" name="r8bbase.cpp" compile="1" resource="0" file="libraries/r8brain-free-src/r8bbase.cpp"/>
       <FILE id="JZM5d1" name="ProcessorHelpers.h" compile="0" resource="0"
             file="source/ProcessorHelpers.h"/>
-      <FILE id="yzDuun" name="DelayBuffer.h" compile="0" resource="0" file="source/DelayBuffer.h"/>
       <FILE id="SQpRhy" name="HRIR3D.h" compile="0" resource="0" file="source/HRIR3D.h"/>
+      <FILE id="lgXxDW" name="Delay.cpp" compile="1" resource="0" file="source/Delay.cpp"/>
+      <FILE id="yKOOp9" name="Delay.h" compile="0" resource="0" file="source/Delay.h"/>
+      <FILE id="N7Giax" name="FirTable.cpp" compile="1" resource="0" file="source/FirTable.cpp"/>
+      <FILE id="FuXJjv" name="FirTable.h" compile="0" resource="0" file="source/FirTable.h"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>
