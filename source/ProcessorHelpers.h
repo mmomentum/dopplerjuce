@@ -13,7 +13,7 @@
 
 #pragma once
 
-#include "Juceheader.h"
+#include <JuceHeader.h>
 
 // take in the point position and spit out a "heading" angle where 0 degrees = up, 90 = right, 180 = down, 270 = left
 inline float angleCalculator(juce::Point<float> point)

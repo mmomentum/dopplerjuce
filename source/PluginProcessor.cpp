@@ -98,21 +98,51 @@ void DopplerAudioProcessor::changeProgramName(int index, const String& newName)
 
 void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
+	int TransitionBandInPercent = 4;
+	int StopBandAttenuation = 100;
+	int DSP_sample_rate = 192000; // need to go to a higher samplerate for resampling
+	int maximum_buffer_size = samplesPerBlock * 1.25;
+
 	spec.sampleRate = sampleRate;
 	spec.maximumBlockSize = samplesPerBlock;
 	spec.numChannels = 1;
+
 	IR_L.prepare(spec);
 	IR_R.prepare(spec);
 	updateHRIRFilter();
 	monoBuffer.setSize(1, samplesPerBlock);
-	IR_L.reset(); // reset the filter's processing pipeline, ready to start a new stream of data
+	IR_L.reset();
 	IR_R.reset();
+
+	for (int i = 0; i < getTotalNumOutputChannels(); i++)
+	{
+		buffer_of_doubles[i] = new double[maximum_buffer_size];  // the upsampler will overwrite this buffer and return it as the DSP buffer
+		for (int j = 0; j < maximum_buffer_size; j++)
+		{
+			buffer_of_doubles[i][j] = 0;
+		}
+	}
+
+	upsampler.clear();
+	downsampler.clear();
+
+	for (int channel = 0; channel < getTotalNumOutputChannels(); channel++)
+	{
+		upsampler.add(new r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >(sampleRate, DSP_sample_rate, maximum_buffer_size, TransitionBandInPercent, StopBandAttenuation, r8b::EDSPFilterPhaseResponse(0), false));
+		downsampler.add(new r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >(DSP_sample_rate, sampleRate, maximum_buffer_size, TransitionBandInPercent, StopBandAttenuation, r8b::EDSPFilterPhaseResponse(0), false));
+		delay[channel].prepareToPlay(sampleRate, sampleRate);
+	}
 }
 
 void DopplerAudioProcessor::releaseResources()
 {
 	// When playback stops, you can use this as an opportunity to free up any
 	// spare memory, etc.
+	for (int k = 0; k < upsampler.size(); ++k)
+	{
+		downsampler[k]->clear();
+		upsampler[k]->clear();
+	}
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -149,23 +179,61 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	static int blockChannels = buffer.getNumChannels();
 
 	for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
-		buffer.clear(i, 0, buffer.getNumSamples());
+		buffer.clear(i, 0, blockSize);
 
 	distanceCalculate(); // calculate distance from sound emitter to L / R listening points
+
+	dsp::AudioBlock <float> block(buffer);
+
+	// delay process
+
+	float** host_buffers = buffer.getArrayOfWritePointers();
+
+	for (int channel = 0; channel < blockChannels; channel++)
+	{
+		delay[channel].setDelayTime(jlimit(0, 44100, delayCalculate(channel, globalSampleRate)));
+
+		const float* float_sample = buffer.getReadPointer(channel);
+		for (int sample = 0; sample < blockSize; ++sample)
+		{
+			buffer_of_doubles[channel][sample] = *float_sample;
+			++float_sample;
+		}
+
+		// the upsamplers are called on each channel of the host buffers. DSP_buffer_size holds the new buffer size
+		DSP_buffer_size = upsampler[channel]->process(buffer_of_doubles[channel], blockSize, DSP_buffer[channel]);
+
+		// Delay Processor
+		delay[channel].process(DSP_buffer[channel], DSP_buffer_size);
+
+		// the downsamplers are called on each channel of the DSP buffers
+		double* downsampler_output_sample;
+		const int downsampler_buffer_size = downsampler[channel]->process(DSP_buffer[channel], DSP_buffer_size, downsampler_output_sample);
+
+		// the downsampled signal is copied into the host buffers.
+		// this step is necessary because the r8b library does not accept a buffer of floats
+		for (int j = 0; j < jmin(blockSize, downsampler_buffer_size); ++j)
+		{
+			host_buffers[channel][j] = *downsampler_output_sample;
+			++downsampler_output_sample;
+		}
+	}
+
+	// attenuate / filter process
+
+
+	// HRTF process 
 
 	float angle = angleCalculator(soundEmitterLocationXY);
 
 	int elevation = 72;
 	theta = angle / 15 + elevation;
 
-	auto bufferL = buffer.getWritePointer(0);
-	auto bufferR = buffer.getWritePointer(1);
-
 	updateHRIRFilter();
-	dsp::AudioBlock<float> blockL = dsp::AudioBlock<float>(&bufferL, 1, blockSize);
-	dsp::AudioBlock<float> blockR = dsp::AudioBlock<float>(&bufferR, 1, blockSize);
-	IR_L.process(dsp::ProcessContextReplacing<float>(blockL));
-	IR_R.process(dsp::ProcessContextReplacing<float>(blockR));
+
+	IR_L.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
+	IR_R.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
+	//cutoffFilter.process(dsp::ProcessContextReplacing<float> (block));
 }
 
 //==============================================================================

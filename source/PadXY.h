@@ -24,7 +24,7 @@
 */
 class PadXY : public Component, public Slider::Listener, public Timer
 {
-	Rectangle<float> padConstraints, dotConstraints;
+	juce::Rectangle<float> padConstraints, dotConstraints;
 
 	float constrainFactor = 0.075f, constrainAmount;
 

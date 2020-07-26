@@ -65,7 +65,7 @@ namespace look {
 
 			// draw dot at midpoint
 
-			g.fillEllipse(Rectangle<float>(static_cast<float> (trackWidth), static_cast<float> (trackWidth)).withCentre(isThreeVal ? midPoint : maxPoint));
+			g.fillEllipse(juce::Rectangle<float>(static_cast<float> (trackWidth), static_cast<float> (trackWidth)).withCentre(isThreeVal ? midPoint : maxPoint));
 		}
 
 	};

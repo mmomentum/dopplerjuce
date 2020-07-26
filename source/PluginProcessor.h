@@ -10,7 +10,10 @@
 
 #pragma once
 
+#include <vector>
 #include "../JuceLibraryCode/JuceHeader.h"
+#include "../libraries/r8brain-free-src/CDSPResampler.h"
+#include "Delay.h"
 
 #include "GlobalVariables.h"
 #include "ProcessorHelpers.h"
@@ -101,17 +104,33 @@ private:
 
 	Point<float> internalInterpolatorPoint = { 0,0 }; // internal interpolated point (and set to 0,0 to avoid errors)
 
-	// HRTF stuff
-	dsp::ProcessSpec spec;
-	AudioSampleBuffer monoBuffer;
-	dsp::FIR::Filter<float> IR_L;
-	dsp::FIR::Filter<float> IR_R;
+	static const int kChannels = 2;
 
 	// various physical values used by the audio processor systems
+
 	float distance[2]; // calculated distance values (in meters)
 	int delaySamples[2]; // calculated delay values (in samples)
 	float velocity[2]; // calculated velocity values (in m/s). positive values = moving towards you and vice versa.
 	int theta = 72;
+
+	dsp::ProcessSpec spec;
+	juce::AudioSampleBuffer monoBuffer;
+	 
+	// all this
+
+	int DSP_buffer_size;
+	double* buffer_of_doubles[kChannels];
+	double* DSP_buffer[kChannels];
+
+	// resampling delay stuff (will probably do a simple dsp lib delay line once i figure out how)
+	OwnedArray<r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >> upsampler;
+	OwnedArray<r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >> downsampler;
+	Delay delay[kChannels]; // two delay processors
+
+	// HRTF stuff
+	dsp::FIR::Filter<float> IR_L;
+	dsp::FIR::Filter<float> IR_R;
+
 	//==============================================================================
 
 	JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DopplerAudioProcessor)
