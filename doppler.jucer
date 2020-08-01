@@ -13,12 +13,15 @@
       <FILE id="K8bkqT" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
     <GROUP id="{31D396AB-D67C-E75D-587E-C62FA0407FF7}" name="Globals">
+      <FILE id="tLO5g8" name="ParameterDefines.h" compile="0" resource="0"
+            file="source/ParameterDefines.h"/>
       <FILE id="pnIrCO" name="GlobalVariables.cpp" compile="1" resource="0"
             file="source/GlobalVariables.cpp"/>
       <FILE id="M6ZkYc" name="GlobalVariables.h" compile="0" resource="0"
             file="Source/GlobalVariables.h"/>
     </GROUP>
     <GROUP id="{E874A0F7-9E44-CCB7-3EC0-017C31390FB1}" name="Graphics">
+      <FILE id="ECqQgG" name="SingleKnob.h" compile="0" resource="0" file="source/SingleKnob.h"/>
       <FILE id="wcTQoP" name="LookAndFeel.h" compile="0" resource="0" file="source/LookAndFeel.h"/>
       <FILE id="TgFajM" name="PadXY.cpp" compile="1" resource="0" file="Source/PadXY.cpp"/>
       <FILE id="sPclIB" name="PadXY.h" compile="0" resource="0" file="Source/PadXY.h"/>

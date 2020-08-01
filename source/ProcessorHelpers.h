@@ -37,3 +37,19 @@ inline float angleCalculator(juce::Point<float> point)
 
 	return degrees;
 }
+
+// calculate gain based on distance utilising inverse square law for each channel
+inline float gainCalculator(float distance)
+{
+	// whole calculation is based on decibels and we convert at the end
+	float gainDB;
+	gainDB = -20.0f * log10f(distance / 0.5f);
+	gainDB = jlimit(-60.0f, 0.0f, gainDB); // deal with asymptote created in function
+	gainDB = jmap(gainDB, 0.0f, -60.0f, 1.0f, 0.1f);
+
+	// am i doing something wrong with decibelsToGain?
+
+	float gainNormalized = gainDB;//Decibels::decibelsToGain(gainDB);
+
+	return gainNormalized;
+}

@@ -25,12 +25,12 @@ DopplerAudioProcessorEditor::DopplerAudioProcessorEditor(DopplerAudioProcessor& 
 	// parameter panel
 	parampanel = std::make_unique<ParameterPanel>(p);
 	addAndMakeVisible(*parampanel);
-	parampanel->setBounds(BORDER_SIZE, XY_PAD_HEIGHT, PARAMETER_PANEL_WIDTH - (BORDER_SIZE * 2), PARAMETER_PANEL_HEIGHT - BORDER_SIZE);
+	parampanel->setBounds(BORDER_SIZE, XY_PAD_HEIGHT, PARAMETER_PANEL_WIDTH - (BORDER_SIZE * 2), PARAMETER_PANEL_HEIGHT);
 }
  
 void DopplerAudioProcessorEditor::paint(Graphics& g)
 {
-    //g.fillAll (Colours::white);
+    g.fillAll (backgroundColor);
 } 
 
 void DopplerAudioProcessorEditor::resized()

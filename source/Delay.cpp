@@ -24,7 +24,7 @@ Delay::Delay()
 	setFlutterAmt(0.025);
 	setScrapeAmt(0.05);
 	setBias(5);
-	setIPS(1);
+	setIPS(3);
 
 }
 
@@ -68,7 +68,7 @@ void Delay::prepareToPlay(int maxDelayTime, int samplerate)
 
 void Delay::setDelayTime(float param_delay_time)
 {
-	delay_time_target = param_delay_time * 0.001;
+	delay_time_target = param_delay_time;
 }
 
 // main DSP function. processing is in place on the DSP_buffer pointer
@@ -154,7 +154,7 @@ void  Delay::process(double* DSP_buffer, int buffer_size)
 		delay_time_current = delay_time_current + 0.00001 * (delay_time_target - double(delay_time_current));
 
 		// sample offset calculated from immediate delay time in milliseconds
-		sample_offset = delay_time_current * sample_rate;
+		sample_offset = delay_time_current;// *sample_rate;
 
 		// FIR filter is called on the DSP buffer and its ouput is written
 		// into the delay buffer, according to the writing position

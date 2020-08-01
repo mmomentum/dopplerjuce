@@ -18,20 +18,7 @@
 #include "GlobalVariables.h"
 #include "ProcessorHelpers.h"
 
-#define X_ID "x"
-#define X_NAME "x"
-
-#define Y_ID "y"
-#define Y_NAME "y"
-
-#define SIZE_ID "size"
-#define SIZE_NAME "size"
-
-#define	SMOOTH_ID "smooth"
-#define SMOOTH_NAME "smooth"
-
-#define DISTANCE_ID "distance"
-#define DISTANCE_NAME "distance"
+#include "ParameterDefines.h"
 
 #define LEN 256
 
@@ -115,17 +102,17 @@ private:
 
 	dsp::ProcessSpec spec;
 	juce::AudioSampleBuffer monoBuffer;
-	 
-	// all this
 
+	// resampling delay stuff (will probably just do a JUCE dsp::delayline once i figure out how)
 	int DSP_buffer_size;
 	double* buffer_of_doubles[kChannels];
 	double* DSP_buffer[kChannels];
-
-	// resampling delay stuff (will probably do a simple dsp lib delay line once i figure out how)
 	OwnedArray<r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >> upsampler;
 	OwnedArray<r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >> downsampler;
 	Delay delay[kChannels]; // two delay processors
+
+	// cutoff filter stuff
+	dsp::ProcessorDuplicator <dsp::IIR::Filter<float>, dsp::IIR::Coefficients <float>> lowPassFilter[2];
 
 	// HRTF stuff
 	dsp::FIR::Filter<float> IR_L;

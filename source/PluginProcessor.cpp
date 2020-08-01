@@ -121,6 +121,8 @@ void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 		{
 			buffer_of_doubles[i][j] = 0;
 		}
+		lowPassFilter[i].prepare(spec);
+		lowPassFilter[i].reset();
 	}
 
 	upsampler.clear();
@@ -171,6 +173,9 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 
 void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+	auto minFreqParameter = treeState.getRawParameterValue(FILTER_ID);
+	auto dopplerFactorParameter = treeState.getRawParameterValue(FACTOR_ID);
+
 	// declare statics nescessary for processing audio once instead of running a
 	// function to get them for every time they're needed (and each block cycle)
 
@@ -191,7 +196,7 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 	for (int channel = 0; channel < blockChannels; channel++)
 	{
-		delay[channel].setDelayTime(jlimit(0, 44100, delayCalculate(channel, globalSampleRate)));
+		delay[channel].setDelayTime(jlimit(0, 44100, int(dopplerFactorParameter[0] * delayCalculate(channel, globalSampleRate))));
 
 		const float* float_sample = buffer.getReadPointer(channel);
 		for (int sample = 0; sample < blockSize; ++sample)
@@ -212,17 +217,33 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 		// the downsampled signal is copied into the host buffers.
 		// this step is necessary because the r8b library does not accept a buffer of floats
-		for (int j = 0; j < jmin(blockSize, downsampler_buffer_size); ++j)
+		for (int sample = 0; sample < jmin(blockSize, downsampler_buffer_size); ++sample)
 		{
-			host_buffers[channel][j] = *downsampler_output_sample;
+			host_buffers[channel][sample] = *downsampler_output_sample;
 			++downsampler_output_sample;
 		}
 	}
 
-	// attenuate / filter process
+	// gain process
 
+	for (int channel = 0; channel < blockChannels; channel++)
+	{
+		auto* channelData = buffer.getWritePointer(channel);
 
-	// HRTF process 
+		for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+		{
+			channelData[sample] *= gainCalculator(distance[channel]); // run gain calculator
+		}
+	}
+
+	// cutoff filter process
+
+	//*lowPassFilter[0].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[0], 0.0f, minFreqParameter[0], 22000.0f, 1500.0f), 1.0f);
+	//*lowPassFilter[1].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[1], 0.0f, minFreqParameter[0], 22000.0f, 1500.0f), 1.0f);
+	//lowPassFilter[0].process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
+	//lowPassFilter[1].process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
+
+	//HRTF process 
 
 	float angle = angleCalculator(soundEmitterLocationXY);
 
@@ -233,7 +254,6 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 	IR_L.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
 	IR_R.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
-	//cutoffFilter.process(dsp::ProcessContextReplacing<float> (block));
 }
 
 //==============================================================================
@@ -287,6 +307,24 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 
 	auto distanceParameter = std::make_unique<AudioParameterFloat>(DISTANCE_ID, DISTANCE_NAME, 5.0f, 100.0f, 9.0f);
 	params.push_back(std::move(distanceParameter));
+
+	auto minFreqParameter = std::make_unique<AudioParameterFloat>(FILTER_ID, FILTER_NAME, NormalisableRange<float> {1500.0f, 22000.0f, 1.0f, std::log(0.5f) / std::log(980.0f / 19980.0f)}, 3000.0f);
+	params.push_back(std::move(minFreqParameter));
+
+	auto modeParameter = std::make_unique<AudioParameterBool>(MODE_ID, MODE_NAME, false);
+	params.push_back(std::move(modeParameter));
+
+	auto hrtfParameter = std::make_unique<AudioParameterBool>(HRTF_ID, HRTF_NAME, false);
+	params.push_back(std::move(hrtfParameter));
+
+	auto ampParameter = std::make_unique<AudioParameterBool>(VOLUME_ID, VOLUME_NAME, false);
+	params.push_back(std::move(ampParameter));
+
+	auto toggleDopplerParameter = std::make_unique<AudioParameterBool>(DOPPLER_ID, DOPPLER_NAME, false);
+	params.push_back(std::move(toggleDopplerParameter));
+
+	auto dopplerFactorParameter = std::make_unique<AudioParameterFloat>(FACTOR_ID, FACTOR_NAME, 0.0f, 3.0f, 1.0f);
+	params.push_back(std::move(dopplerFactorParameter));
 
 	return { params.begin(), params.end() };
 }
