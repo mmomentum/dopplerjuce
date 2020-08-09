@@ -60,10 +60,14 @@ namespace look {
 
 			// draw track
 
-			g.setColour(whiteColor);
+			g.setGradientFill(ColourGradient(whiteColor, maxPoint.getX(), maxPoint.getY(),
+				Colours::transparentWhite, midPoint.getX(), midPoint.getY(), false));
+
 			g.strokePath(valueTrack, { trackWidth, PathStrokeType::curved, PathStrokeType::rounded });
 
 			// draw dot at midpoint
+
+			g.setColour(whiteColor);
 
 			g.fillEllipse(juce::Rectangle<float>(static_cast<float> (trackWidth), static_cast<float> (trackWidth)).withCentre(isThreeVal ? midPoint : maxPoint));
 		}

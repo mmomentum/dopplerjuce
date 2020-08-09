@@ -87,10 +87,10 @@ public:
 
 	// target dot positioning
 	Point<int> constrainPosition(float x, float y);
-	Point<int> getValueAsPosition(float x, float y);
+	//Point<int> getValueAsPosition(float x, float y);
 
 	// value setting
-	void setPositionAsValue(Point<float> position);
+	//void setPositionAsValue(Point<float> position);
 
 	//bool isMouseEntered = { false };
 	bool mouseDragging = { false };
@@ -108,9 +108,6 @@ private:
 
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> xSliderValue; // scoped pointer is depreciated in JUCE so we use this instead
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> ySliderValue;
-
-	// smoothed values for X and Y axis of *actual location*
-	// SmoothedValue<float> xSmoothed, ySmoothed;
 
 	int cornerSize = 10; // rounding of rectangular XY pad boundaries
 

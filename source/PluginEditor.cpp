@@ -30,7 +30,11 @@ DopplerAudioProcessorEditor::DopplerAudioProcessorEditor(DopplerAudioProcessor& 
  
 void DopplerAudioProcessorEditor::paint(Graphics& g)
 {
-    g.fillAll (backgroundColor);
+    g.fillAll (Colours::black);
+
+	g.setGradientFill(juce::ColourGradient(backgroundColor, getWidth() / 10.0f, XY_PAD_HEIGHT,
+		backgroundColor.darker(0.2), getWidth(), getHeight(), false));
+	g.fillRoundedRectangle(0, XY_PAD_HEIGHT - 15, PARAMETER_PANEL_WIDTH, PARAMETER_PANEL_HEIGHT + 15, 10);
 } 
 
 void DopplerAudioProcessorEditor::resized()
