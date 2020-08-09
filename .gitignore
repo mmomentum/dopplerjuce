@@ -204,3 +204,4 @@ Builds/VisualStudio2019/x64/Debug/Shared Code/HilbertShifter.obj
 Builds/VisualStudio2019/x64/Debug/Shared Code/FirTable.obj
 Builds/VisualStudio2019/x64/Debug/Shared Code/calcErrorTable.obj
 Builds/VisualStudio2019/x64/Debug/Shared Code/BinaryData.obj
+*.obj

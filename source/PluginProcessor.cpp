@@ -173,8 +173,15 @@ bool DopplerAudioProcessor::isBusesLayoutSupported(const BusesLayout& layouts) c
 
 void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer& midiMessages)
 {
+	// sliders
 	auto minFreqParameter = treeState.getRawParameterValue(FILTER_ID);
 	auto dopplerFactorParameter = treeState.getRawParameterValue(FACTOR_ID);
+
+	// buttons
+	auto modeParameter = treeState.getRawParameterValue(MODE_ID); // delay or FFT mode
+	auto volumeToggleParameter = treeState.getRawParameterValue(VOLUME_ID); // volume attenuation on / off
+	auto dopplerToggleParameter = treeState.getRawParameterValue(DOPPLER_ID); // doppler shifting on / off
+	auto hrtfToggleParameter = treeState.getRawParameterValue(HRTF_ID); // HRTF spatialization on / off
 
 	// declare statics nescessary for processing audio once instead of running a
 	// function to get them for every time they're needed (and each block cycle)
@@ -192,50 +199,55 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 	// delay process
 
-	float** host_buffers = buffer.getArrayOfWritePointers();
-
-	for (int channel = 0; channel < blockChannels; channel++)
+	if (dopplerToggleParameter[0] == 1)
 	{
-		delay[channel].setDelayTime(jlimit(0, 44100, int(dopplerFactorParameter[0] * delayCalculate(channel, globalSampleRate))));
+		float** host_buffers = buffer.getArrayOfWritePointers();
 
-		const float* float_sample = buffer.getReadPointer(channel);
-		for (int sample = 0; sample < blockSize; ++sample)
+		for (int channel = 0; channel < blockChannels; channel++)
 		{
-			buffer_of_doubles[channel][sample] = *float_sample;
-			++float_sample;
-		}
+			delay[channel].setDelayTime(jlimit(0, 44100, int(dopplerFactorParameter[0] * delayCalculate(channel, globalSampleRate))));
 
-		// the upsamplers are called on each channel of the host buffers. DSP_buffer_size holds the new buffer size
-		DSP_buffer_size = upsampler[channel]->process(buffer_of_doubles[channel], blockSize, DSP_buffer[channel]);
+			const float* float_sample = buffer.getReadPointer(channel);
+			for (int sample = 0; sample < blockSize; ++sample)
+			{
+				buffer_of_doubles[channel][sample] = *float_sample;
+				++float_sample;
+			}
 
-		// Delay Processor
-		delay[channel].process(DSP_buffer[channel], DSP_buffer_size);
+			// the upsamplers are called on each channel of the host buffers. DSP_buffer_size holds the new buffer size
+			DSP_buffer_size = upsampler[channel]->process(buffer_of_doubles[channel], blockSize, DSP_buffer[channel]);
 
-		// the downsamplers are called on each channel of the DSP buffers
-		double* downsampler_output_sample;
-		const int downsampler_buffer_size = downsampler[channel]->process(DSP_buffer[channel], DSP_buffer_size, downsampler_output_sample);
+			// Delay Processor
+			delay[channel].process(DSP_buffer[channel], DSP_buffer_size);
 
-		// the downsampled signal is copied into the host buffers.
-		// this step is necessary because the r8b library does not accept a buffer of floats
-		for (int sample = 0; sample < jmin(blockSize, downsampler_buffer_size); ++sample)
-		{
-			host_buffers[channel][sample] = *downsampler_output_sample;
-			++downsampler_output_sample;
+			// the downsamplers are called on each channel of the DSP buffers
+			double* downsampler_output_sample;
+			const int downsampler_buffer_size = downsampler[channel]->process(DSP_buffer[channel], DSP_buffer_size, downsampler_output_sample);
+
+			// the downsampled signal is copied into the host buffers.
+			// this step is necessary because the r8b library does not accept a buffer of floats
+			for (int sample = 0; sample < jmin(blockSize, downsampler_buffer_size); ++sample)
+			{
+				host_buffers[channel][sample] = *downsampler_output_sample;
+				++downsampler_output_sample;
+			}
 		}
 	}
 
 	// gain process
 
-	for (int channel = 0; channel < blockChannels; channel++)
+	if (volumeToggleParameter[0] == 1)
 	{
-		auto* channelData = buffer.getWritePointer(channel);
-
-		for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+		for (int channel = 0; channel < blockChannels; channel++)
 		{
-			channelData[sample] *= gainCalculator(distance[channel]); // run gain calculator
+			auto* channelData = buffer.getWritePointer(channel);
+
+			for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+			{
+				channelData[sample] *= gainCalculator(distance[channel]); // run gain calculator
+			}
 		}
 	}
-
 	// cutoff filter process
 
 	//*lowPassFilter[0].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[0], 0.0f, minFreqParameter[0], 22000.0f, 1500.0f), 1.0f);
@@ -244,16 +256,18 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	//lowPassFilter[1].process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
 
 	//HRTF process 
+	if (hrtfToggleParameter[0] == 1)
+	{
+		float angle = angleCalculator(soundEmitterLocationXY);
 
-	float angle = angleCalculator(soundEmitterLocationXY);
+		//int elevation = 72;
+		theta = angle / 15;
 
-	int elevation = 72;
-	theta = angle / 15 + elevation;
+		updateHRIRFilter();
 
-	updateHRIRFilter();
-
-	IR_L.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
-	IR_R.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
+		IR_L.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
+		IR_R.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
+	}
 }
 
 //==============================================================================
@@ -270,15 +284,18 @@ AudioProcessorEditor* DopplerAudioProcessor::createEditor()
 //==============================================================================
 void DopplerAudioProcessor::getStateInformation(MemoryBlock& destData)
 {
-	// You should use this method to store your parameters in the memory block.
-	// You could do that either as raw data, or use the XML or ValueTree classes
-	// as intermediaries to make it easy to save and load complex data.
+	// get state from current parameter tree and make it an XML
+	ValueTree copyState = treeState.copyState();
+	std::unique_ptr<XmlElement> xml = copyState.createXml();
+	copyXmlToBinary(*xml.get(), destData);
 }
 
 void DopplerAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
-	// You should use this method to restore your parameters from this memory block,
-	// whose contents will have been created by the getStateInformation() call.
+	// retrieve XML data and replace init parameters with the held ones
+	std::unique_ptr<XmlElement> xml = getXmlFromBinary(data, sizeInBytes);
+	ValueTree copyState = ValueTree::fromXml(*xml.get());
+	treeState.replaceState(copyState);
 }
 
 //==============================================================================
@@ -314,13 +331,13 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 	auto modeParameter = std::make_unique<AudioParameterBool>(MODE_ID, MODE_NAME, false);
 	params.push_back(std::move(modeParameter));
 
-	auto hrtfParameter = std::make_unique<AudioParameterBool>(HRTF_ID, HRTF_NAME, false);
+	auto hrtfParameter = std::make_unique<AudioParameterBool>(HRTF_ID, HRTF_NAME, true);
 	params.push_back(std::move(hrtfParameter));
 
-	auto ampParameter = std::make_unique<AudioParameterBool>(VOLUME_ID, VOLUME_NAME, false);
+	auto ampParameter = std::make_unique<AudioParameterBool>(VOLUME_ID, VOLUME_NAME, true);
 	params.push_back(std::move(ampParameter));
 
-	auto toggleDopplerParameter = std::make_unique<AudioParameterBool>(DOPPLER_ID, DOPPLER_NAME, false);
+	auto toggleDopplerParameter = std::make_unique<AudioParameterBool>(DOPPLER_ID, DOPPLER_NAME, true);
 	params.push_back(std::move(toggleDopplerParameter));
 
 	auto dopplerFactorParameter = std::make_unique<AudioParameterFloat>(FACTOR_ID, FACTOR_NAME, 0.0f, 3.0f, 1.0f);
