@@ -35,6 +35,7 @@
             file="source/InterfaceDefines.h"/>
     </GROUP>
     <GROUP id="{3ABCDAE5-FBC2-E3F0-61C7-024EE181F989}" name="DSP">
+      <FILE id="i8VrUS" name="DryWet.h" compile="0" resource="0" file="source/DryWet.h"/>
       <FILE id="uX1i93" name="r8bbase.cpp" compile="1" resource="0" file="libraries/r8brain-free-src/r8bbase.cpp"/>
       <FILE id="JZM5d1" name="ProcessorHelpers.h" compile="0" resource="0"
             file="source/ProcessorHelpers.h"/>

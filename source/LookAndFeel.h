@@ -159,7 +159,7 @@ namespace look {
 				rotaryEndAngle,
 				true);
 
-			g.setColour(greyColor.withAlpha(float(0.5)));
+			g.setColour(greyColor.withAlpha(float(0.25)));
 			g.strokePath(backgroundArc, PathStrokeType(lineW, PathStrokeType::curved, PathStrokeType::rounded));
 
 			if (slider.isEnabled())

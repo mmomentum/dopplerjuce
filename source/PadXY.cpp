@@ -15,8 +15,8 @@
 
 //==============================================================================
 
-PadXY::PadXY(DopplerAudioProcessor& p)
-	: Component(), processor(p), Slider::Listener(), Timer()
+PadXY::PadXY(DopplerAudioProcessor& p) : Component(), processor(p), Slider::Listener(), Timer()
+
 {
 	setSize(XY_PAD_WIDTH, XY_PAD_HEIGHT);
 
@@ -73,8 +73,8 @@ PadXY::PadXY(DopplerAudioProcessor& p)
 	xLabel.setText(String("0.000", 5), dontSendNotification);
 	yLabel.setText(String("0.000", 5), dontSendNotification);
 
-	xLabel.setFont(Font ("Roboto Mono", 16.00f, Font::plain));
-	yLabel.setFont(Font ("Roboto Mono", 16.00f, Font::plain));
+	xLabel.setFont(Font("Roboto Mono", 16.00f, Font::plain));
+	yLabel.setFont(Font("Roboto Mono", 16.00f, Font::plain));
 
 	// start timer
 
@@ -94,7 +94,7 @@ void PadXY::mouseDown(const MouseEvent& e)
 
 	currentMouseXY = dotTarget.getPosition().toFloat();
 
-	xSlider.setValue(jmap(currentMouseXY.getX(), constrainAmount, padConstraints.getWidth()- (constrainAmount * 1.0f), -1.0f, 1.0f));
+	xSlider.setValue(jmap(currentMouseXY.getX(), constrainAmount, padConstraints.getWidth() - (constrainAmount * 1.0f), -1.0f, 1.0f));
 	ySlider.setValue(jmap(currentMouseXY.getY(), constrainAmount, padConstraints.getHeight() - (constrainAmount * 1.0f), 1.0f, -1.0f));
 }
 
@@ -105,7 +105,6 @@ void PadXY::mouseDrag(const MouseEvent& e)
 		mouseDragging = true;
 
 		dotTarget.setCentrePosition(constrainPosition(mouseDownXY.getX() + e.getDistanceFromDragStartX(), mouseDownXY.getY() + e.getDistanceFromDragStartY()));
-		//setPositionAsValue(dotTarget.getPosition().toFloat());
 		repaint();
 
 		// set current mouse coordinates
@@ -157,7 +156,7 @@ void PadXY::sliderValueChanged(Slider* slider)
 	if (mouseDragging == false)
 	{
 		dotTarget.setCentrePosition(jmap((float)xSlider.getValue(), -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_WIDTH - (constrainAmount * 1.0f) - cornerSize),
-									jmap((float)ySlider.getValue() * -1.0f, -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_HEIGHT - (constrainAmount * 1.0f) - cornerSize));
+			jmap((float)ySlider.getValue() * -1.0f, -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_HEIGHT - (constrainAmount * 1.0f) - cornerSize));
 	}
 }
 
@@ -165,7 +164,7 @@ void PadXY::timerCallback()
 {
 	// set dot location
 	dotActual.setCentrePosition(jmap(soundEmitterLocationXY.getX(), -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_WIDTH - (constrainAmount * 1.0f) - cornerSize),
-								jmap(soundEmitterLocationXY.getY() * -1.0f, -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_HEIGHT - (constrainAmount * 1.0f) - cornerSize));
+		jmap(soundEmitterLocationXY.getY() * -1.0f, -1.0f, 1.0f, constrainAmount + cornerSize, XY_PAD_HEIGHT - (constrainAmount * 1.0f) - cornerSize));
 
 	// seeing a bit of inaccuracy after the move to the audioprocessor but its probably just a jmap target range issue
 
@@ -191,7 +190,7 @@ void PadXY::paint(Graphics& g)
 	// fine details
 
 	g.setGradientFill(juce::ColourGradient(Colours::transparentWhite, getWidth() / 2, getHeight() / 2,
-		screenColor.darker(0.3f).withAlpha(0.5f), 0, 0, true));
+		screenColor.darker(1.0f).withAlpha(0.5f), -getWidth() / 8, -getHeight() / 8, true));
 
 	g.fillRoundedRectangle(padConstraints, cornerSize);
 
@@ -206,6 +205,9 @@ void PadXY::paint(Graphics& g)
 
 		g.setColour(whiteColor.withAlpha(alpha));
 		g.drawEllipse((padConstraints.getWidth() - currentWidth) / 2, (padConstraints.getHeight() - currentWidth) / 2, currentWidth, currentWidth, 1.5f);
+
+		g.setColour(whiteColor.withAlpha(alpha / 30.0f));
+		g.fillEllipse((padConstraints.getWidth() - currentWidth) / 2, (padConstraints.getHeight() - currentWidth) / 2, currentWidth, currentWidth);
 	}
 
 	g.setColour(whiteColor);
@@ -220,10 +222,10 @@ void PadXY::paint(Graphics& g)
 		whiteColor.withAlpha(0.3f), constrainAmount * 1.5f, getWidth() / 2, true));
 
 	// left / right
-	line.startNewSubPath(constrainAmount, dotConstraints.getHeight() / 2);
-	line.lineTo(dotConstraints.getWidth() - constrainAmount, dotConstraints.getHeight() / 2);
-
-	g.strokePath(line, { 1.5f, PathStrokeType::curved, PathStrokeType::rounded });
+	//line.startNewSubPath(constrainAmount, dotConstraints.getHeight() / 2);
+	//line.lineTo(dotConstraints.getWidth() - constrainAmount, dotConstraints.getHeight() / 2);
+	
+	//g.strokePath(line, { 1.5f, PathStrokeType::curved, PathStrokeType::rounded });
 }
 
 void PadXY::resized()
@@ -257,6 +259,11 @@ void PadXY::resized()
 	// slider bounds
 	xSlider.setBounds(constrainAmount, getHeight() - constrainAmount, getWidth() - (constrainAmount * 2.0f), constrainAmount);
 	ySlider.setBounds(0, constrainAmount, constrainAmount, getHeight() - (constrainAmount * 2.0f));
+}
+
+void PadXY::setDotSize(float blockAverage)
+{
+	blockAverage = dotSizeMeter;
 }
 
 //==============================================================================

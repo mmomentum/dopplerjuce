@@ -22,8 +22,8 @@
 #define	SMOOTH_ID "smooth"
 #define SMOOTH_NAME "smooth"
 
-#define DISTANCE_ID "distance"
-#define DISTANCE_NAME "distance"
+#define DRYWET_ID "mix"
+#define DRYWET_NAME "mix"
 
 #define MODE_ID "mode"
 #define MODE_NAME "mode"

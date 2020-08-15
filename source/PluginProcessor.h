@@ -15,6 +15,8 @@
 #include "../libraries/r8brain-free-src/CDSPResampler.h"
 #include "Delay.h"
 
+#include "DryWet.h"
+
 #include "GlobalVariables.h"
 #include "ProcessorHelpers.h"
 
@@ -82,6 +84,9 @@ public:
 
 	void updateHRIRFilter();
 
+	// calculate average of incoming block
+	void getAverage(AudioBuffer<float> buffer, int blockSize, int blockChannels);
+
 	//==============================================================================
 
 	AudioProcessorValueTreeState treeState;
@@ -117,6 +122,10 @@ private:
 	// HRTF stuff
 	dsp::FIR::Filter<float> IR_L;
 	dsp::FIR::Filter<float> IR_R;
+
+	// dry wet
+	DryWetProcessor dryWet; // dry / wet mix system
+	juce::AudioBuffer<float> dryBuffer; // for dry / wet mixing
 
 	//==============================================================================
 

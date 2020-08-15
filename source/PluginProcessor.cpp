@@ -134,6 +134,12 @@ void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 		downsampler.add(new r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >(DSP_sample_rate, sampleRate, maximum_buffer_size, TransitionBandInPercent, StopBandAttenuation, r8b::EDSPFilterPhaseResponse(0), false));
 		delay[channel].prepareToPlay(sampleRate, sampleRate);
 	}
+
+	dryWet.setDryWet(50.0f);
+	dryWet.reset();
+	dryBuffer.setSize(2, samplesPerBlock);
+
+
 }
 
 void DopplerAudioProcessor::releaseResources()
@@ -176,6 +182,7 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	// sliders
 	auto minFreqParameter = treeState.getRawParameterValue(FILTER_ID);
 	auto dopplerFactorParameter = treeState.getRawParameterValue(FACTOR_ID);
+	auto dryWetParameter = treeState.getRawParameterValue(DRYWET_ID);
 
 	// buttons
 	auto modeParameter = treeState.getRawParameterValue(MODE_ID); // delay or FFT mode
@@ -190,12 +197,15 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	static int blockSize = buffer.getNumSamples();
 	static int blockChannels = buffer.getNumChannels();
 
+	// copy input to the dry buffer for later mixing
+	dryBuffer.makeCopyOf(buffer, true);
+
 	for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
 		buffer.clear(i, 0, blockSize);
 
 	distanceCalculate(); // calculate distance from sound emitter to L / R listening points
 
-	dsp::AudioBlock <float> block(buffer);
+	dsp::AudioBlock <float> block(buffer); // for DSP stuff
 
 	// delay process
 
@@ -203,12 +213,12 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	{
 		float** host_buffers = buffer.getArrayOfWritePointers();
 
-		for (int channel = 0; channel < blockChannels; channel++)
+		for (int channel = 0; channel < blockChannels; channel++) // per channel
 		{
 			delay[channel].setDelayTime(jlimit(0, 44100, int(dopplerFactorParameter[0] * delayCalculate(channel, globalSampleRate))));
 
 			const float* float_sample = buffer.getReadPointer(channel);
-			for (int sample = 0; sample < blockSize; ++sample)
+			for (int sample = 0; sample < blockSize; ++sample) // per sample
 			{
 				buffer_of_doubles[channel][sample] = *float_sample;
 				++float_sample;
@@ -217,7 +227,7 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 			// the upsamplers are called on each channel of the host buffers. DSP_buffer_size holds the new buffer size
 			DSP_buffer_size = upsampler[channel]->process(buffer_of_doubles[channel], blockSize, DSP_buffer[channel]);
 
-			// Delay Processor
+			// delay Processor
 			delay[channel].process(DSP_buffer[channel], DSP_buffer_size);
 
 			// the downsamplers are called on each channel of the DSP buffers
@@ -238,20 +248,21 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 	if (volumeToggleParameter[0] == 1)
 	{
-		for (int channel = 0; channel < blockChannels; channel++)
+		for (int channel = 0; channel < blockChannels; channel++) // per channel
 		{
 			auto* channelData = buffer.getWritePointer(channel);
 
-			for (int sample = 0; sample < buffer.getNumSamples(); ++sample)
+			for (int sample = 0; sample < buffer.getNumSamples(); ++sample) // per sample
 			{
 				channelData[sample] *= gainCalculator(distance[channel]); // run gain calculator
 			}
 		}
 	}
+
 	// cutoff filter process
 
-	//*lowPassFilter[0].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[0], 0.0f, minFreqParameter[0], 22000.0f, 1500.0f), 1.0f);
-	//*lowPassFilter[1].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[1], 0.0f, minFreqParameter[0], 22000.0f, 1500.0f), 1.0f);
+	//*lowPassFilter[0].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[0], 0.0f, float(minFreqParameter[0]), 22000.0f, 1500.0f), 1.0f);
+	//*lowPassFilter[1].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[1], 0.0f, float(minFreqParameter[0]), 22000.0f, 1500.0f), 1.0f);
 	//lowPassFilter[0].process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
 	//lowPassFilter[1].process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
 
@@ -268,6 +279,11 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 		IR_L.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
 		IR_R.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
 	}
+
+	// dry wet process
+
+	dryWet.setDryWet(dryWetParameter[0] / 100.0f);
+	dryWet.processBlock(dryBuffer, buffer);
 }
 
 //==============================================================================
@@ -322,8 +338,8 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 	auto smoothParameter = std::make_unique<AudioParameterInt>(SMOOTH_ID, SMOOTH_NAME, 100, 5000, 500);
 	params.push_back(std::move(smoothParameter));
 
-	auto distanceParameter = std::make_unique<AudioParameterFloat>(DISTANCE_ID, DISTANCE_NAME, 5.0f, 100.0f, 9.0f);
-	params.push_back(std::move(distanceParameter));
+	auto dryWetParameter = std::make_unique<AudioParameterFloat>(DRYWET_ID, DRYWET_NAME, 0.0f, 100.0f, 100.0f);
+	params.push_back(std::move(dryWetParameter));
 
 	auto minFreqParameter = std::make_unique<AudioParameterFloat>(FILTER_ID, FILTER_NAME, NormalisableRange<float> {1500.0f, 22000.0f, 1.0f, std::log(0.5f) / std::log(980.0f / 19980.0f)}, 3000.0f);
 	params.push_back(std::move(minFreqParameter));
@@ -349,9 +365,11 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 float DopplerAudioProcessor::distanceCalculate()
 {
 	auto sizeValue = treeState.getRawParameterValue(SIZE_ID); // size of plane (meters)
-	auto distanceValue = treeState.getRawParameterValue(DISTANCE_ID); // spacing distance between pickup points (meters)
+	//auto distanceValue = treeState.getRawParameterValue(DISTANCE_ID); // spacing distance between pickup points (meters)
 
-	double distanceValueMeters = distanceValue[0] / 100.0f; // divide down into centimeters once instead of four times per function call
+	//double distanceValueMeters = distanceValue[0] / 100.0f; // divide down into centimeters once instead of four times per function call
+
+	double distanceValueMeters = 0.09; // divide down into centimeters once instead of four times per function call
 
 	Point<float> soundEmitterLocationMeters; // point for the actual ACTUAL location (in meters instead of an arbitrary -1 - +1 range) 
 
@@ -390,6 +408,20 @@ void DopplerAudioProcessor::updateHRIRFilter()
 {
 	*(IR_L.coefficients) = dsp::FIR::Coefficients<float>(hrir_l[theta], LEN);
 	*(IR_R.coefficients) = dsp::FIR::Coefficients<float>(hrir_r[theta], LEN);
+}
+
+void DopplerAudioProcessor::getAverage(AudioBuffer<float> buffer, int blockSize, int blockChannels)
+{
+	for (int channel = 0; channel < blockChannels; channel++)
+	{
+		float averageOfSamples = 0.0f;
+
+		for (int sample = 0; sample < blockSize; ++sample)
+			averageOfSamples += fabs(buffer.getSample(channel, sample));
+
+		averageOfSamples /= blockSize;
+		averageOfSamples /= blockChannels;
+	}
 }
 
 //==============================================================================

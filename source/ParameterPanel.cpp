@@ -75,43 +75,20 @@ ParameterPanel::ParameterPanel(DopplerAudioProcessor& p)
 
 		smoothSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, SMOOTH_ID, smoothSlider);
 	}
-	// knob for setting distance between listening points (in cm)
+	// knob for minimum filtering amount (turn to max to stop filtering, basically)
 	{
 		addAndMakeVisible(sliderLabel[2]);
 		addAndMakeVisible(sliderName[2]);
-		addAndMakeVisible(distanceSlider);
+		addAndMakeVisible(minFreqSlider);
 
 		sliderName[2].setJustificationType(juce::Justification::centred);
 		sliderName[2].setFont(Font("MuseoModerno", labelSize * textMultiplier, Font::plain));
 		sliderName[2].setColour(Label::textColourId, greyColor);
-		sliderName[2].setText("Spacing", dontSendNotification);
+		sliderName[2].setText("Min Hz", dontSendNotification);
 
 		sliderLabel[2].setJustificationType(juce::Justification::centred);
 		sliderLabel[2].setFont(Font("Roboto Mono", labelSize * 1.2, Font::plain));
 		sliderLabel[2].setColour(Label::textColourId, whiteColor);
-
-		distanceSlider.setRange(5.0f, 100.0f);
-		distanceSlider.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-		distanceSlider.setTextBoxStyle(Slider::NoTextBox, true, 60, 20);
-		distanceSlider.addListener(this);
-		distanceSlider.setLookAndFeel(&sliderLAF);
-
-		distanceSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, DISTANCE_ID, distanceSlider);
-	}
-	// knob for minimum filtering amount (turn to max to stop filtering, basically)
-	{
-		addAndMakeVisible(sliderLabel[3]);
-		addAndMakeVisible(sliderName[3]);
-		addAndMakeVisible(minFreqSlider);
-
-		sliderName[3].setJustificationType(juce::Justification::centred);
-		sliderName[3].setFont(Font("MuseoModerno", labelSize * textMultiplier, Font::plain));
-		sliderName[3].setColour(Label::textColourId, greyColor);
-		sliderName[3].setText("Min Hz", dontSendNotification);
-
-		sliderLabel[3].setJustificationType(juce::Justification::centred);
-		sliderLabel[3].setFont(Font("Roboto Mono", labelSize * 1.2, Font::plain));
-		sliderLabel[3].setColour(Label::textColourId, whiteColor);
 
 		minFreqSlider.setRange(1500.0f, 22000.0f);
 		minFreqSlider.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
@@ -123,18 +100,18 @@ ParameterPanel::ParameterPanel(DopplerAudioProcessor& p)
 	}
 	// knob for doppler factor (multiplies delay time by knob amount (where 1 = normal factor))
 	{
-		addAndMakeVisible(sliderLabel[4]);
-		addAndMakeVisible(sliderName[4]);
+		addAndMakeVisible(sliderLabel[3]);
+		addAndMakeVisible(sliderName[3]);
 		addAndMakeVisible(dopplerFactorSlider);
 
-		sliderName[4].setJustificationType(juce::Justification::centred);
-		sliderName[4].setFont(Font("MuseoModerno", labelSize * textMultiplier, Font::plain));
-		sliderName[4].setColour(Label::textColourId, greyColor);
-		sliderName[4].setText("Factor", dontSendNotification);
+		sliderName[3].setJustificationType(juce::Justification::centred);
+		sliderName[3].setFont(Font("MuseoModerno", labelSize * textMultiplier, Font::plain));
+		sliderName[3].setColour(Label::textColourId, greyColor);
+		sliderName[3].setText("Factor", dontSendNotification);
 
-		sliderLabel[4].setJustificationType(juce::Justification::centred);
-		sliderLabel[4].setFont(Font("Roboto Mono", labelSize * 1.2, Font::plain));
-		sliderLabel[4].setColour(Label::textColourId, whiteColor);
+		sliderLabel[3].setJustificationType(juce::Justification::centred);
+		sliderLabel[3].setFont(Font("Roboto Mono", labelSize * 1.2, Font::plain));
+		sliderLabel[3].setColour(Label::textColourId, whiteColor);
 
 		dopplerFactorSlider.setRange(0.0f, 3.0f);
 		dopplerFactorSlider.setValue(1.0f);
@@ -145,6 +122,32 @@ ParameterPanel::ParameterPanel(DopplerAudioProcessor& p)
 
 		dopplerFactorSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, FACTOR_ID, dopplerFactorSlider);
 	}
+	{
+		addAndMakeVisible(sliderLabel[4]);
+		addAndMakeVisible(sliderName[4]);
+		addAndMakeVisible(dryWetSlider);
+
+		sliderName[4].setJustificationType(juce::Justification::centred);
+		sliderName[4].setFont(Font("MuseoModerno", labelSize * textMultiplier, Font::plain));
+		sliderName[4].setColour(Label::textColourId, greyColor);
+		sliderName[4].setText("Mix", dontSendNotification);
+
+		sliderLabel[4].setJustificationType(juce::Justification::centred);
+		sliderLabel[4].setFont(Font("Roboto Mono", labelSize * 1.2, Font::plain));
+		sliderLabel[4].setColour(Label::textColourId, whiteColor);
+		
+
+
+		dryWetSlider.setRange(0.0f, 100.0f);
+		dryWetSlider.setValue(100.0f);
+		dryWetSlider.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
+		dryWetSlider.setTextBoxStyle(Slider::NoTextBox, true, 60, 20);
+		dryWetSlider.addListener(this);
+		dryWetSlider.setLookAndFeel(&sliderLAF);
+
+		dryWetSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, DRYWET_ID, dryWetSlider);
+	}
+
 
 	// add buttons
 
@@ -206,14 +209,6 @@ void ParameterPanel::sliderValueChanged(Slider* slider)
 				sliderLabel[1].setText(String(slider->getValue() / 1000.0f, 1) + "s", dontSendNotification);
 		}
 	}
-	if (slider == &distanceSlider)
-	{
-		if (processor.getNumParameters() > 4)
-		{
-			processor.getParameters()[4]->setValue(slider->getValue());
-			sliderLabel[2].setText(String(slider->getValue(), 1) + "Cm", dontSendNotification);
-		}
-	}
 	if (slider == &minFreqSlider)
 	{
 		if (processor.getNumParameters() > 5)
@@ -221,9 +216,9 @@ void ParameterPanel::sliderValueChanged(Slider* slider)
 			processor.getParameters()[5]->setValue(slider->getValue());
 
 			if (int(slider->getValue()) < 10000)
-				sliderLabel[3].setText(String(slider->getValue() / 1000.0f, 2) + "KHz", dontSendNotification);
+				sliderLabel[2].setText(String(slider->getValue() / 1000.0f, 2) + "KHz", dontSendNotification);
 			if (int(slider->getValue()) > 10000)
-				sliderLabel[3].setText(String(slider->getValue() / 1000.0f, 1) + "KHz", dontSendNotification);
+				sliderLabel[2].setText(String(slider->getValue() / 1000.0f, 1) + "KHz", dontSendNotification);
 		}
 	}
 	if (slider == &dopplerFactorSlider)
@@ -231,8 +226,16 @@ void ParameterPanel::sliderValueChanged(Slider* slider)
 		if (processor.getNumParameters() > 10)
 		{
 			processor.getParameters()[10]->setValue(slider->getValue());
-			sliderLabel[4].setText(String(slider->getValue(), 2), dontSendNotification);
+			sliderLabel[3].setText(String(slider->getValue(), 2), dontSendNotification);
 		}
+	}
+	if (slider == &dryWetSlider)
+	{
+		//if (processor.getNumParameters() > 2) // parameter size checker
+		//{
+			//processor.getParameters()[2]->setValue(slider->getValue()); // push to parameters vector
+			sliderLabel[4].setText(String(slider->getValue(), 1) + "%", dontSendNotification);
+		//}
 	}
 }
 
@@ -266,6 +269,7 @@ void ParameterPanel::resized()
 	// sliders
 	{
 		{
+			// plane size slider
 			sliderBounds[0].setBounds(0, 0, getWidth() / 5.0f, (getHeight() / 3) * 2.0f);
 
 			sizeSlider.setBounds(sliderBounds[0]);
@@ -275,6 +279,7 @@ void ParameterPanel::resized()
 			sliderName[0].setBounds(sliderBounds[0]);
 		}
 		{
+			// smoothing slider
 			sliderBounds[1].setBounds((getWidth() / 5.0f), 0, getWidth() / 5.0f, (getHeight() / 3) * 2.0f);
 
 			smoothSlider.setBounds(sliderBounds[1]);
@@ -284,27 +289,30 @@ void ParameterPanel::resized()
 			sliderName[1].setBounds(sliderBounds[1]);
 		}
 		{
+			// min freq
 			sliderBounds[2].setBounds(((getWidth() / 5.0f) * 2.0f), 0, getWidth() / 5.0f, (getHeight() / 3) * 2.0f);
 
-			distanceSlider.setBounds(sliderBounds[2]);
+			minFreqSlider.setBounds(sliderBounds[2]);
 			sliderLabel[2].setBounds(sliderBounds[2]);
 
 			sliderBounds[2].translate(0, sliderBounds[2].getHeight() * sliderNameOffset);
 			sliderName[2].setBounds(sliderBounds[2]);
 		}
 		{
+			// doppler factor
 			sliderBounds[3].setBounds(((getWidth() / 5.0f) * 3.0f), 0, getWidth() / 5.0f, (getHeight() / 3) * 2.0f);
 
-			minFreqSlider.setBounds(sliderBounds[3]);
+			dopplerFactorSlider.setBounds(sliderBounds[3]);
 			sliderLabel[3].setBounds(sliderBounds[3]);
 
 			sliderBounds[3].translate(0, sliderBounds[3].getHeight() * sliderNameOffset);
 			sliderName[3].setBounds(sliderBounds[3]);
 		}
 		{
+			// dry wet slider
 			sliderBounds[4].setBounds(((getWidth() / 5.0f) * 4.0f), 0, getWidth() / 5.0f, (getHeight() / 3) * 2.0f);
 
-			dopplerFactorSlider.setBounds(sliderBounds[4]);
+			dryWetSlider.setBounds(sliderBounds[4]);
 			sliderLabel[4].setBounds(sliderBounds[4]);
 
 			sliderBounds[4].translate(0, sliderBounds[4].getHeight() * sliderNameOffset);
@@ -333,11 +341,13 @@ void ParameterPanel::resized()
 
 ParameterPanel::~ParameterPanel()
 {
+	// remove styling to prevent issues
+
 	sizeSlider.setLookAndFeel(nullptr);
-	distanceSlider.setLookAndFeel(nullptr);
 	smoothSlider.setLookAndFeel(nullptr);
 	minFreqSlider.setLookAndFeel(nullptr);
 	dopplerFactorSlider.setLookAndFeel(nullptr);
+	dryWetSlider.setLookAndFeel(nullptr);
 
 	pitchingModeButton.setLookAndFeel(nullptr);
 	dopplerToggleButton.setLookAndFeel(nullptr);

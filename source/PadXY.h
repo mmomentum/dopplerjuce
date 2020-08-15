@@ -98,6 +98,8 @@ public:
 	// interpolation
 	void timerCallback() override;
 
+	void setDotSize(float blockAverage); // get the blockaverage and set dot size
+
 private:
 
 	// virtual function for slider listener
@@ -110,6 +112,8 @@ private:
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> ySliderValue;
 
 	int cornerSize = 10; // rounding of rectangular XY pad boundaries
+
+	float dotSizeMeter;
 
 	look::sliderXYLAF SliderXYLAF;
 

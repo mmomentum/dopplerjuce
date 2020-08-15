@@ -41,14 +41,14 @@ private:
 	Slider smoothSlider;
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> smoothSliderValue;
 
-	Slider distanceSlider;
-	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> distanceSliderValue;
-
 	Slider minFreqSlider;
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> minFreqSliderValue;
 
 	Slider dopplerFactorSlider;
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> dopplerFactorSliderValue;
+
+	Slider dryWetSlider;
+	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> dryWetSliderValue;
 
 	TextButton pitchingModeButton;
 	std::unique_ptr <AudioProcessorValueTreeState::ButtonAttachment> pitchingModeButtonValue;
