@@ -3,8 +3,6 @@
 <JUCERPROJECT id="N1rJfH" name="doppler" projectType="audioplug" pluginFormats="buildStandalone,buildVST3"
               jucerFormatVersion="1">
   <MAINGROUP id="rdFA8w" name="doppler">
-    <FILE id="nN4puB" name="test.cpp" compile="1" resource="0" file="source/test.cpp"/>
-    <FILE id="aDXXRu" name="test.h" compile="0" resource="0" file="source/test.h"/>
     <GROUP id="{41072A8D-0C03-0299-906C-E40FCF11607E}" name="Source">
       <FILE id="afgqA8" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
