@@ -10,10 +10,7 @@
 
 #pragma once
 
-#include <vector>
 #include "../JuceLibraryCode/JuceHeader.h"
-#include "../libraries/r8brain-free-src/CDSPResampler.h"
-#include "Delay.h"
 
 #include "DryWet.h"
 
@@ -77,7 +74,7 @@ public:
 	float distanceCalculate(); 
 
 	// calclate delay times (in samples) for IATD L / R delays (works using distanceCalculate())
-	int delayCalculate(int channel, int sampleRate); 
+	float delayCalculate(int channel, int sampleRate);
 
 	// calculate velocity (in meters / second) for FFT based doppler
 	float velocityCalculate(int channel);
@@ -101,20 +98,18 @@ private:
 	// various physical values used by the audio processor systems
 
 	float distance[2]; // calculated distance values (in meters)
-	int delaySamples[2]; // calculated delay values (in samples)
+	float delaySamples[2]; // calculated delay values (in samples)
 	float velocity[2]; // calculated velocity values (in m/s). positive values = moving towards you and vice versa.
 	int theta = 72;
+
+	std::array<double, 2> delayEffectValue;
 
 	dsp::ProcessSpec spec;
 	juce::AudioSampleBuffer monoBuffer;
 
-	// resampling delay stuff (will probably just do a JUCE dsp::delayline once i figure out how)
-	int DSP_buffer_size;
-	double* buffer_of_doubles[kChannels];
-	double* DSP_buffer[kChannels];
-	OwnedArray<r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >> upsampler;
-	OwnedArray<r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >> downsampler;
-	Delay delay[kChannels]; // two delay processors
+	dsp::DelayLine<float, dsp::DelayLineInterpolationTypes::Lagrange3rd> delay { 88200 }; // max delay in samples (should probably adjust to change based on sample rate to save memory)
+
+	dsp::FirstOrderTPTFilter<double> smoothFilter; // for smoothing of the filter time (also adjusted by the smoothing parameter)
 
 	// cutoff filter stuff
 	dsp::ProcessorDuplicator <dsp::IIR::Filter<float>, dsp::IIR::Coefficients <float>> lowPassFilter[2];

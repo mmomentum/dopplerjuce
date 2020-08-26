@@ -23,6 +23,8 @@
     <GROUP id="{E874A0F7-9E44-CCB7-3EC0-017C31390FB1}" name="Graphics">
       <FILE id="ECqQgG" name="SingleKnob.h" compile="0" resource="0" file="source/SingleKnob.h"/>
       <FILE id="wcTQoP" name="LookAndFeel.h" compile="0" resource="0" file="source/LookAndFeel.h"/>
+      <FILE id="Eugf9T" name="InnerPadXY.cpp" compile="1" resource="0" file="source/InnerPadXY.cpp"/>
+      <FILE id="kU7cZ4" name="InnerPadXY.h" compile="0" resource="0" file="source/InnerPadXY.h"/>
       <FILE id="TgFajM" name="PadXY.cpp" compile="1" resource="0" file="Source/PadXY.cpp"/>
       <FILE id="sPclIB" name="PadXY.h" compile="0" resource="0" file="Source/PadXY.h"/>
       <FILE id="yRNDdI" name="ParameterPanel.cpp" compile="1" resource="0"
@@ -34,14 +36,9 @@
     </GROUP>
     <GROUP id="{3ABCDAE5-FBC2-E3F0-61C7-024EE181F989}" name="DSP">
       <FILE id="i8VrUS" name="DryWet.h" compile="0" resource="0" file="source/DryWet.h"/>
-      <FILE id="uX1i93" name="r8bbase.cpp" compile="1" resource="0" file="libraries/r8brain-free-src/r8bbase.cpp"/>
       <FILE id="JZM5d1" name="ProcessorHelpers.h" compile="0" resource="0"
             file="source/ProcessorHelpers.h"/>
       <FILE id="SQpRhy" name="HRIR3D.h" compile="0" resource="0" file="source/HRIR3D.h"/>
-      <FILE id="lgXxDW" name="Delay.cpp" compile="1" resource="0" file="source/Delay.cpp"/>
-      <FILE id="yKOOp9" name="Delay.h" compile="0" resource="0" file="source/Delay.h"/>
-      <FILE id="N7Giax" name="FirTable.cpp" compile="1" resource="0" file="source/FirTable.cpp"/>
-      <FILE id="FuXJjv" name="FirTable.h" compile="0" resource="0" file="source/FirTable.h"/>
     </GROUP>
   </MAINGROUP>
   <EXPORTFORMATS>

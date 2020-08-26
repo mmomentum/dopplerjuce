@@ -98,14 +98,11 @@ void DopplerAudioProcessor::changeProgramName(int index, const String& newName)
 
 void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-	int TransitionBandInPercent = 4;
-	int StopBandAttenuation = 100;
-	int DSP_sample_rate = 192000; // need to go to a higher samplerate for resampling
-	int maximum_buffer_size = samplesPerBlock * 1.25;
-
 	spec.sampleRate = sampleRate;
 	spec.maximumBlockSize = samplesPerBlock;
 	spec.numChannels = 1;
+
+	
 
 	IR_L.prepare(spec);
 	IR_R.prepare(spec);
@@ -114,43 +111,23 @@ void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 	IR_L.reset();
 	IR_R.reset();
 
-	for (int i = 0; i < getTotalNumOutputChannels(); i++)
-	{
-		buffer_of_doubles[i] = new double[maximum_buffer_size];  // the upsampler will overwrite this buffer and return it as the DSP buffer
-		for (int j = 0; j < maximum_buffer_size; j++)
-		{
-			buffer_of_doubles[i][j] = 0;
-		}
-		lowPassFilter[i].prepare(spec);
-		lowPassFilter[i].reset();
-	}
+	spec.numChannels = 2;
 
-	upsampler.clear();
-	downsampler.clear();
+	delay.prepare(spec);
+	smoothFilter.prepare(spec); // filtering a value in this case
 
-	for (int channel = 0; channel < getTotalNumOutputChannels(); channel++)
-	{
-		upsampler.add(new r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >(sampleRate, DSP_sample_rate, maximum_buffer_size, TransitionBandInPercent, StopBandAttenuation, r8b::EDSPFilterPhaseResponse(0), false));
-		downsampler.add(new r8b::CDSPResampler< r8b::CDSPFracInterpolator< 6, 11 > >(DSP_sample_rate, sampleRate, maximum_buffer_size, TransitionBandInPercent, StopBandAttenuation, r8b::EDSPFilterPhaseResponse(0), false));
-		delay[channel].prepareToPlay(sampleRate, sampleRate);
-	}
+	delay.reset();
+	smoothFilter.reset();
 
 	dryWet.setDryWet(50.0f);
 	dryWet.reset();
 	dryBuffer.setSize(2, samplesPerBlock);
-
-
 }
 
 void DopplerAudioProcessor::releaseResources()
 {
 	// When playback stops, you can use this as an opportunity to free up any
 	// spare memory, etc.
-	for (int k = 0; k < upsampler.size(); ++k)
-	{
-		downsampler[k]->clear();
-		upsampler[k]->clear();
-	}
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -184,6 +161,8 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	auto dopplerFactorParameter = treeState.getRawParameterValue(FACTOR_ID);
 	auto dryWetParameter = treeState.getRawParameterValue(DRYWET_ID);
 
+	auto smoothingParameter = treeState.getRawParameterValue(SMOOTH_ID);
+
 	// buttons
 	auto modeParameter = treeState.getRawParameterValue(MODE_ID); // delay or FFT mode
 	auto volumeToggleParameter = treeState.getRawParameterValue(VOLUME_ID); // volume attenuation on / off
@@ -205,41 +184,25 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 	distanceCalculate(); // calculate distance from sound emitter to L / R listening points
 
-	dsp::AudioBlock <float> block(buffer); // for DSP stuff
+	dsp::AudioBlock <float> block(buffer); // for some DSP stuff
 
 	// delay process
 
+	smoothFilter.setCutoffFrequency(0.1); // fix later so that the "smoothing" value can make the pitch go up and down more drastically with the speed of the dot
+
 	if (dopplerToggleParameter[0] == 1)
 	{
-		float** host_buffers = buffer.getArrayOfWritePointers();
-
-		for (int channel = 0; channel < blockChannels; channel++) // per channel
+		for (int channel = 0; channel < blockChannels; channel++)
 		{
-			delay[channel].setDelayTime(jlimit(0, 44100, int(dopplerFactorParameter[0] * delayCalculate(channel, globalSampleRate))));
+			delayEffectValue[channel] = jlimit(0.0f, 44100.0f, dopplerFactorParameter[0] * delayCalculate(channel, globalSampleRate));
 
-			const float* float_sample = buffer.getReadPointer(channel);
-			for (int sample = 0; sample < blockSize; ++sample) // per sample
+			for (int sample = 0; sample < blockSize; sample++)
 			{
-				buffer_of_doubles[channel][sample] = *float_sample;
-				++float_sample;
-			}
+				auto delayValue = smoothFilter.processSample(int(channel), delayEffectValue[channel]);
 
-			// the upsamplers are called on each channel of the host buffers. DSP_buffer_size holds the new buffer size
-			DSP_buffer_size = upsampler[channel]->process(buffer_of_doubles[channel], blockSize, DSP_buffer[channel]);
-
-			// delay Processor
-			delay[channel].process(DSP_buffer[channel], DSP_buffer_size);
-
-			// the downsamplers are called on each channel of the DSP buffers
-			double* downsampler_output_sample;
-			const int downsampler_buffer_size = downsampler[channel]->process(DSP_buffer[channel], DSP_buffer_size, downsampler_output_sample);
-
-			// the downsampled signal is copied into the host buffers.
-			// this step is necessary because the r8b library does not accept a buffer of floats
-			for (int sample = 0; sample < jmin(blockSize, downsampler_buffer_size); ++sample)
-			{
-				host_buffers[channel][sample] = *downsampler_output_sample;
-				++downsampler_output_sample;
+				delay.pushSample(channel, buffer.getSample(channel, sample));
+				delay.setDelay(float(delayValue));
+				buffer.setSample(channel, sample, delay.popSample(channel));
 			}
 		}
 	}
@@ -276,8 +239,11 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 		updateHRIRFilter();
 
-		IR_L.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
-		IR_R.process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
+		for (int s = 0; s < blockSize; s++)
+		{
+			buffer.setSample(0, s, IR_L.processSample(buffer.getSample(0, s)));
+			buffer.setSample(1, s, IR_R.processSample(buffer.getSample(1, s)));
+		}
 	}
 
 	// dry wet process
@@ -383,12 +349,12 @@ float DopplerAudioProcessor::distanceCalculate()
 	return 0;
 }
 
-int DopplerAudioProcessor::delayCalculate(int channel, int sampleRate)
+float DopplerAudioProcessor::delayCalculate(int channel, int sampleRate)
 {
 	// calculate delay times in samples by dividing distance by the speed
 	// of sound in meters and then multiplying it by the current sample rate.
 
-	delaySamples[channel] = roundToInt((distance[channel] / SPEED_OF_SOUND) * sampleRate);
+	delaySamples[channel] = (distance[channel] / SPEED_OF_SOUND) * sampleRate;
 
 	return delaySamples[channel];
 }
