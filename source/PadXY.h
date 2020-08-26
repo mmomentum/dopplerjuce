@@ -17,6 +17,8 @@
 
 #include "PluginProcessor.h"
 
+#include "InnerPadXY.h"
+
 #include "LookAndFeel.h"
 
 //==============================================================================
@@ -30,47 +32,6 @@ class PadXY : public Component, public Slider::Listener, public Timer
 
 	float x_min, x_max, y_min, y_max, x_val, y_val;
 
-	bool rightMouseButtonDown = false;
-
-	// invert Y value for a traditional cartesian coordinate system (lower half is negative)
-	bool yInvert = true;
-
-	float yInverted = 0;
-
-	bool mouseIsEntered = { false };
-
-	Point<float> currentMouseXY;
-	Point<float> mouseDownXY;
-
-	class XYDot : public Component
-	{
-
-	protected:
-
-		Point<float> dotXY;
-		Colour colour;
-
-
-		void setColour(Colour col)
-		{
-			colour = col;
-			repaint();
-		}
-
-		void paint(Graphics& g)  override
-		{
-			g.fillAll(Colours::transparentBlack);
-			g.setColour(colour);
-			g.fillEllipse(getLocalBounds().toFloat());
-		}
-
-		friend class PadXY;
-	};
-
-	// visual dots
-	XYDot dotTarget; // dragged dot on XY pad, the *target* for where the emitter is going to
-	XYDot dotActual; // visual representation of the *actual* location of the sound emitter
-
 public:
 
 	PadXY(DopplerAudioProcessor& p);
@@ -79,31 +40,11 @@ public:
 	void paint(Graphics& g) override;
 	void resized() override;
 
-	// mouse stuff
-	void mouseDown(const MouseEvent& e) override;
-	void mouseDrag(const MouseEvent& e) override;
-	void mouseEnter(const MouseEvent& e) override;
-	void mouseExit(const MouseEvent& e) override;
-
-	// target dot positioning
-	Point<int> constrainPosition(float x, float y);
-	//Point<int> getValueAsPosition(float x, float y);
-
-	// value setting
-	//void setPositionAsValue(Point<float> position);
-
-	//bool isMouseEntered = { false };
-	bool mouseDragging = { false };
-
-	// interpolation
-	void timerCallback() override;
-
-	void setDotSize(float blockAverage); // get the blockaverage and set dot size
-
 private:
 
 	// virtual function for slider listener
 	void sliderValueChanged(Slider* slider) override;
+	void timerCallback() override;
 
 	Slider xSlider, ySlider;
 	Label xLabel, yLabel;
@@ -111,11 +52,9 @@ private:
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> xSliderValue; // scoped pointer is depreciated in JUCE so we use this instead
 	std::unique_ptr <AudioProcessorValueTreeState::SliderAttachment> ySliderValue;
 
-	int cornerSize = 10; // rounding of rectangular XY pad boundaries
-
-	float dotSizeMeter;
-
 	look::sliderXYLAF SliderXYLAF;
+
+	PadInner dotPad;
 
 	DopplerAudioProcessor& processor;
 
