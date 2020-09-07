@@ -102,8 +102,6 @@ void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 	spec.maximumBlockSize = samplesPerBlock;
 	spec.numChannels = 1;
 
-	
-
 	IR_L.prepare(spec);
 	IR_R.prepare(spec);
 	updateHRIRFilter();
@@ -115,6 +113,14 @@ void DopplerAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 
 	delay.prepare(spec);
 	smoothFilter.prepare(spec); // filtering a value in this case
+
+	cutoffFilter[0].setType(juce::dsp::FirstOrderTPTFilterType::lowpass);
+	cutoffFilter[0].prepare(spec);
+	cutoffFilter[0].reset();
+
+	cutoffFilter[1].setType(juce::dsp::FirstOrderTPTFilterType::lowpass);
+	cutoffFilter[1].prepare(spec);
+	cutoffFilter[1].reset();
 
 	delay.reset();
 	smoothFilter.reset();
@@ -188,7 +194,7 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 	// delay process
 
-	smoothFilter.setCutoffFrequency(0.1); // fix later so that the "smoothing" value can make the pitch go up and down more drastically with the speed of the dot
+	smoothFilter.setCutoffFrequency(0.5); // fix later so that the "smoothing" value can make the pitch go up and down more drastically with the speed of the dot
 
 	if (dopplerToggleParameter[0] == 1)
 	{
@@ -223,11 +229,18 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 	}
 
 	// cutoff filter process
+	for (int channel = 0; channel < blockChannels; channel++) // per channel
+	{
+		cutoffFilter[channel].setCutoffFrequency(jmap(distance[channel], 0.0f, 150.0f, 22000.0f, float(minFreqParameter[0])));
 
-	//*lowPassFilter[0].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[0], 0.0f, float(minFreqParameter[0]), 22000.0f, 1500.0f), 1.0f);
-	//*lowPassFilter[1].state = *dsp::IIR::Coefficients<float>::makeLowPass(globalSampleRate, jmap(distance[1], 0.0f, float(minFreqParameter[0]), 22000.0f, 1500.0f), 1.0f);
-	//lowPassFilter[0].process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(0)));
-	//lowPassFilter[1].process(dsp::ProcessContextReplacing<float>(block.getSingleChannelBlock(1)));
+		//cutoffFilter[channel].setCutoffFrequency(1500.0f);
+
+		//cutoffFilter[channel].setCutoffFrequency(350.0f);
+
+		for (int sample = 0; sample < blockSize; ++sample) // per sample
+			buffer.setSample(channel, sample, cutoffFilter[channel].processSample(channel, buffer.getSample(channel, sample)));
+
+	}
 
 	//HRTF process 
 	if (hrtfToggleParameter[0] == 1)
@@ -241,13 +254,18 @@ void DopplerAudioProcessor::processBlock(AudioBuffer<float>& buffer, MidiBuffer&
 
 		for (int s = 0; s < blockSize; s++)
 		{
-			buffer.setSample(0, s, IR_L.processSample(buffer.getSample(0, s)));
-			buffer.setSample(1, s, IR_R.processSample(buffer.getSample(1, s)));
+			/*
+			we multiply the incoming sample by  2.665 here because doing so
+			essentially normalizes the HRTF data i am using (where the highest 
+			sample value of any of the IRs is 0.3752. 0.3752 * 2.665 = 1.0.)
+			*/
+
+			buffer.setSample(0, s, IR_L.processSample(buffer.getSample(0, s) * 2.665f));
+			buffer.setSample(1, s, IR_R.processSample(buffer.getSample(1, s) * 2.665f));
 		}
 	}
 
 	// dry wet process
-
 	dryWet.setDryWet(dryWetParameter[0] / 100.0f);
 	dryWet.processBlock(dryBuffer, buffer);
 }
@@ -307,7 +325,7 @@ AudioProcessorValueTreeState::ParameterLayout DopplerAudioProcessor::createParam
 	auto dryWetParameter = std::make_unique<AudioParameterFloat>(DRYWET_ID, DRYWET_NAME, 0.0f, 100.0f, 100.0f);
 	params.push_back(std::move(dryWetParameter));
 
-	auto minFreqParameter = std::make_unique<AudioParameterFloat>(FILTER_ID, FILTER_NAME, NormalisableRange<float> {1500.0f, 22000.0f, 1.0f, std::log(0.5f) / std::log(980.0f / 19980.0f)}, 3000.0f);
+	auto minFreqParameter = std::make_unique<AudioParameterFloat>(FILTER_ID, FILTER_NAME, NormalisableRange<float> {150.0f, 22000.0f, 1.0f, std::log(0.5f) / std::log(980.0f / 19980.0f)}, 3000.0f);
 	params.push_back(std::move(minFreqParameter));
 
 	auto modeParameter = std::make_unique<AudioParameterBool>(MODE_ID, MODE_NAME, false);
@@ -395,9 +413,7 @@ void DopplerAudioProcessor::getAverage(AudioBuffer<float> buffer, int blockSize,
 void DopplerAudioProcessor::timerCallback()
 {
 	// interpolation variables
-	static Point<float> interpolationMovementAmount;
-	static float interpolationTime;
-	static float interpolationRemaining;
+	Point<float> interpolationMovementAmount;
 
 	// get X / Y coordinate parameters
 	auto xCoordinate = treeState.getRawParameterValue(X_ID);
@@ -408,7 +424,7 @@ void DopplerAudioProcessor::timerCallback()
 
 	// perform interpolation (nonlinear, *kind of* exponential)
 	Point<float> diff;
-	diff.setXY(xCoordinate[0] - (internalInterpolatorPoint.getX() - 0.0f), yCoordinate[0] - (internalInterpolatorPoint.getY() - 0.0f));
+	diff.setXY(xCoordinate[0] - internalInterpolatorPoint.getX(), yCoordinate[0] - internalInterpolatorPoint.getY());
 
 	float timePortion = getTimerInterval() / (smoothingValue[0] / 2); // smoothing value isn't actually in milliseconds i dont think...
 

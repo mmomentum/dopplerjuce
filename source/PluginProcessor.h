@@ -112,7 +112,7 @@ private:
 	dsp::FirstOrderTPTFilter<double> smoothFilter; // for smoothing of the filter time (also adjusted by the smoothing parameter)
 
 	// cutoff filter stuff
-	dsp::ProcessorDuplicator <dsp::IIR::Filter<float>, dsp::IIR::Coefficients <float>> lowPassFilter[2];
+	dsp::FirstOrderTPTFilter<float> cutoffFilter[2];
 
 	// HRTF stuff
 	dsp::FIR::Filter<float> IR_L;

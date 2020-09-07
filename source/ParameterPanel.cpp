@@ -41,7 +41,7 @@ ParameterPanel::ParameterPanel(DopplerAudioProcessor& p)
 
 		sizeSlider.setRange(5.0f, 100.0f);
 		sizeSlider.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-		sizeSlider.setTextBoxStyle(Slider::NoTextBox, true, 60, 20);
+		sizeSlider.setTextBoxStyle(Slider::NoTextBox, false, 60, 20);
 		sizeSlider.addListener(this);
 		sizeSlider.setLookAndFeel(&sliderLAF);
 
@@ -64,10 +64,9 @@ ParameterPanel::ParameterPanel(DopplerAudioProcessor& p)
 		sliderLabel[1].setFont(Font("Roboto Mono", labelSize * 1.2, Font::plain));
 		sliderLabel[1].setColour(Label::textColourId, whiteColor);
 
-
 		smoothSlider.setRange(100, 5000);
 		smoothSlider.setSliderStyle(Slider::SliderStyle::RotaryVerticalDrag);
-		smoothSlider.setTextBoxStyle(Slider::NoTextBox, true, 60, 20);
+		smoothSlider.setTextBoxStyle(Slider::NoTextBox, false, 60, 20);
 		smoothSlider.addListener(this);
 		smoothSlider.setLookAndFeel(&sliderLAF);
 
