@@ -19,24 +19,27 @@ PadXY::PadXY(DopplerAudioProcessor& p) : Component(), processor(p), Slider::List
 {
 	setSize(XY_PAD_WIDTH, XY_PAD_HEIGHT);
 
+	auto xCoordinate = processor.treeState.getRawParameterValue(X_ID);
+	auto yCoordinate = processor.treeState.getRawParameterValue(Y_ID);
+
 	// add X / Y sliders
 	xSlider.setRange(-1.0f, 1.0f);
-	//xSlider.setValue(0.0f);
 	xSlider.setSliderStyle(Slider::SliderStyle::LinearHorizontal);
 	xSlider.setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 	xSlider.addListener(this);
 	xSlider.setLookAndFeel(&SliderXYLAF);
 	addAndMakeVisible(&xSlider);
+	xSlider.setValue(xCoordinate[0]);
 
 	xSliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, X_ID, xSlider);
 
 	ySlider.setRange(-1.0f, 1.0f);
-	//ySlider.setValue(0.0f);
 	ySlider.setSliderStyle(Slider::SliderStyle::LinearVertical);
 	ySlider.setTextBoxStyle(Slider::NoTextBox, false, 0, 0);
 	ySlider.addListener(this);
 	ySlider.setLookAndFeel(&SliderXYLAF);
 	addAndMakeVisible(&ySlider);
+	ySlider.setValue(yCoordinate[0]);
 
 	ySliderValue = std::make_unique<AudioProcessorValueTreeState::SliderAttachment>(p.treeState, Y_ID, ySlider);
 
@@ -53,7 +56,7 @@ void PadXY::sliderValueChanged(Slider* slider)
 	{
 		if (processor.getNumParameters() > 0) // checker for parameter vector
 		{
-			processor.getParameters()[0]->setValue(slider->getValue()); // push to parameters vector
+			//processor.getParameters()[0]->setValue(slider->getValue()); // push to parameters vector
 			dotPad.setValue(0, slider->getValue());
 		}
 	}
@@ -61,7 +64,7 @@ void PadXY::sliderValueChanged(Slider* slider)
 	{
 		if (processor.getNumParameters() > 1)
 		{
-			processor.getParameters()[1]->setValue(slider->getValue()); // push to parameters vector
+			//processor.getParameters()[1]->setValue(slider->getValue()); // push to parameters vector
 			dotPad.setValue(1, slider->getValue());
 		}
 	}
@@ -73,10 +76,10 @@ void PadXY::timerCallback()
 
 	processor.setParameter(0, dotPad.getValue(0));
 
-	processor.getParameters()[0]->setValue(dotPad.getValue(0)); // push to parameters vector
+	//processor.getParameters()[0]->setValue(dotPad.getValue(0)); // push to parameters vector
 	xSlider.setValue(dotPad.getValue(0));
 
-	processor.getParameters()[1]->setValue(dotPad.getValue(1)); // push to parameters vector
+	//processor.getParameters()[1]->setValue(dotPad.getValue(1)); // push to parameters vector
 	ySlider.setValue(dotPad.getValue(1));
 }
 

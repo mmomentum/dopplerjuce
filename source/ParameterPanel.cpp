@@ -192,7 +192,7 @@ void ParameterPanel::sliderValueChanged(Slider* slider)
 	{
 		if (processor.getNumParameters() > 2) // parameter size checker
 		{
-			processor.getParameters()[2]->setValue(slider->getValue()); // push to parameters vector
+			//processor.getParameters()[2]->setValue(slider->getValue()); // push to parameters vector
 			sliderLabel[0].setText(String(slider->getValue(), 1) + "M", dontSendNotification);
 		}
 	}
@@ -200,7 +200,7 @@ void ParameterPanel::sliderValueChanged(Slider* slider)
 	{
 		if (processor.getNumParameters() > 3)
 		{
-			processor.getParameters()[3]->setValue(slider->getValue());
+			//processor.getParameters()[3]->setValue(slider->getValue());
 
 			if (int(slider->getValue()) < 1000)
 				sliderLabel[1].setText(String(slider->getValue(), 1) + "ms", dontSendNotification);
@@ -212,7 +212,7 @@ void ParameterPanel::sliderValueChanged(Slider* slider)
 	{
 		if (processor.getNumParameters() > 5)
 		{
-			processor.getParameters()[5]->setValue(slider->getValue());
+			//processor.getParameters()[5]->setValue(slider->getValue());
 
 			if (int(slider->getValue()) < 10000)
 				sliderLabel[2].setText(String(slider->getValue() / 1000.0f, 2) + "KHz", dontSendNotification);
@@ -224,7 +224,7 @@ void ParameterPanel::sliderValueChanged(Slider* slider)
 	{
 		if (processor.getNumParameters() > 10)
 		{
-			processor.getParameters()[10]->setValue(slider->getValue());
+			//processor.getParameters()[10]->setValue(slider->getValue());
 			sliderLabel[3].setText(String(slider->getValue(), 2), dontSendNotification);
 		}
 	}
@@ -242,19 +242,19 @@ void ParameterPanel::buttonClicked(Button* button)
 {
 	if (button == &pitchingModeButton)
 	{
-		processor.getParameters()[6]->setValue(int(pitchingModeButton.getToggleState()));
+		//processor.getParameters()[6]->setValue(int(pitchingModeButton.getToggleState()));
 	}
 	if (button == &hrtfToggleButton)
 	{
-		processor.getParameters()[7]->setValue(int(hrtfToggleButton.getToggleState()));
+		//processor.getParameters()[7]->setValue(int(hrtfToggleButton.getToggleState()));
 	}
 	if (button == &ampToggleButton)
 	{
-		processor.getParameters()[8]->setValue(int(ampToggleButton.getToggleState()));
+		//processor.getParameters()[8]->setValue(int(ampToggleButton.getToggleState()));
 	}
 	if (button == &dopplerToggleButton)
 	{
-		processor.getParameters()[9]->setValue(int(dopplerToggleButton.getToggleState()));
+		//processor.getParameters()[9]->setValue(int(dopplerToggleButton.getToggleState()));
 	}
 }
 

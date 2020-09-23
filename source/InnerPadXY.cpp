@@ -12,6 +12,8 @@
 
 PadInner::PadInner() : juce::Component() , Timer()
 {
+	setValue(0, 0);
+	setValue(1, 0);
 
 	// add slider labels
 	xLabel.setText(String(0.0, 3), dontSendNotification);
@@ -70,6 +72,14 @@ void PadInner::mouseDrag(const MouseEvent& e)
 
 		yVal = jlimit(-1.0f, 1.0f, jmap(float(mouseDownXY.getY() + e.getDistanceFromDragStartY()), dotTarget.getWidth() * .5f, getWidth() - dotTarget.getWidth() * .5f, 1.0f, -1.0f));
 	}
+}
+
+void PadInner::mouseDoubleClick(const MouseEvent& e)
+{
+	yVal = 0.0f;
+	xVal = 0.0f;
+
+	dotTarget.setCentreRelative(0.5f, 0.5f);
 }
 
 void PadInner::mouseEnter(const MouseEvent& e)

@@ -82,42 +82,110 @@ namespace look {
 			bool shouldDrawButtonAsHighlighted,
 			bool shouldDrawButtonAsDown)
 		{
-			auto cornerSize = 7.0f;
+			auto cornerSize = 3.0f;
 			auto bounds = button.getLocalBounds().toFloat().reduced(0.5f, 0.5f);
 
-			auto baseColour = greyColor.withAlpha(float(0.5));
+			auto baseColour = Colours::transparentWhite;
+
+			if (shouldDrawButtonAsHighlighted)
+				baseColour = leftColor.withAlpha(0.5f);
 
 			if (button.getToggleState() == true)
-				baseColour = leftColor;
+				baseColour = greyColor.withAlpha(0.5f);
 
+			if (shouldDrawButtonAsHighlighted && button.getToggleState() == true)
+				baseColour = leftColor.interpolatedWith(greyColor, 0.5f).withAlpha(0.5f);
 
 			g.setColour(baseColour);
 
-			g.fillRoundedRectangle(bounds, cornerSize);
+			auto flatOnLeft = button.isConnectedOnLeft();
+			auto flatOnRight = button.isConnectedOnRight();
+			auto flatOnTop = button.isConnectedOnTop();
+			auto flatOnBottom = button.isConnectedOnBottom();
 
+			if (flatOnLeft || flatOnRight || flatOnTop || flatOnBottom)
+			{
+				Path path;
+				path.addRoundedRectangle(bounds.getX(), bounds.getY(),
+					bounds.getWidth(), bounds.getHeight(),
+					cornerSize, cornerSize,
+					!(flatOnLeft || flatOnTop),
+					!(flatOnRight || flatOnTop),
+					!(flatOnLeft || flatOnBottom),
+					!(flatOnRight || flatOnBottom));
+
+				g.fillPath(path);
+
+				g.setColour(greyColor.withAlpha(0.5f));
+				g.strokePath(path, PathStrokeType(2.0f));
+			}
+			else
+			{
+				g.fillRoundedRectangle(bounds.reduced(1.0f), cornerSize);
+
+				if (button.getToggleState() == false)
+					g.setColour(greyColor.withAlpha(0.5f));
+
+				g.drawRoundedRectangle(bounds.reduced(1.0f), cornerSize, 2.0f);
+			}
 		}
 
 		void drawToggleButton(Graphics& g, ToggleButton& button,
 			bool shouldDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
 		{
-			auto fontSize = jmin(15.0f, button.getHeight() * 0.75f);
+			auto fontSize = jmin(15.0f, (float)button.getHeight() * 0.75f);
 			auto tickWidth = fontSize * 1.1f;
 
-			drawTickBox(g, button, 4.0f, (button.getHeight() - tickWidth) * 0.5f,
+			drawTickBox(g, button, 4.0f, ((float)button.getHeight() - tickWidth) * 0.5f,
 				tickWidth, tickWidth,
 				button.getToggleState(),
 				button.isEnabled(),
 				shouldDrawButtonAsHighlighted,
 				shouldDrawButtonAsDown);
 
+			g.setColour(button.findColour(ToggleButton::textColourId));
+			g.setFont(fontSize);
 
-			g.setColour(whiteColor);
-			g.setFont(Font("Museo Moderno", 24.00f, Font::plain));
+			if (!button.isEnabled())
+				g.setOpacity(0.5f);
 
 			g.drawFittedText(button.getButtonText(),
 				button.getLocalBounds().withTrimmedLeft(roundToInt(tickWidth) + 10)
 				.withTrimmedRight(2),
 				Justification::centredLeft, 10);
+		}
+
+
+		void drawTickBox(Graphics& g, Component& component,
+			float x, float y, float w, float h,
+			const bool ticked,
+			const bool isEnabled,
+			const bool shouldDrawButtonAsHighlighted,
+			const bool shouldDrawButtonAsDown)
+		{
+			ignoreUnused(isEnabled, shouldDrawButtonAsHighlighted, shouldDrawButtonAsDown);
+
+			Rectangle<float> tickBounds(x, y, w, h);
+
+			g.setColour(component.findColour(ToggleButton::tickDisabledColourId));
+			g.drawRoundedRectangle(tickBounds, .0f, 1.0f);
+
+			if (ticked)
+			{
+				g.setColour(component.findColour(ToggleButton::tickColourId));
+				auto tick = getTickShape(0.75f);
+				g.fillPath(tick, tick.getTransformToScaleToFit(tickBounds.reduced(4, 5).toFloat(), false));
+			}
+		}
+
+		void changeToggleButtonWidthToFitText(ToggleButton& button)
+		{
+			auto fontSize = jmin(15.0f, (float)button.getHeight() * 0.75f);
+			auto tickWidth = fontSize * 1.1f;
+
+			Font font(fontSize);
+
+			button.setSize(font.getStringWidth(button.getButtonText()) + roundToInt(tickWidth) + 14, button.getHeight());
 		}
 	};
 
