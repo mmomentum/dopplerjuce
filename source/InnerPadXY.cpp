@@ -12,9 +12,6 @@
 
 PadInner::PadInner() : juce::Component() , Timer()
 {
-	setValue(0, 0);
-	setValue(1, 0);
-
 	// add slider labels
 	xLabel.setText(String(0.0, 3), dontSendNotification);
 	xLabel.setJustificationType(Justification::centred);
